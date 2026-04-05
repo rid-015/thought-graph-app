@@ -29,20 +29,20 @@ const ATTRACTION = 0.003
 const DAMPING = 0.92
 const CENTER_GRAVITY = 0.002
 
-// Theme colors - subtle warm tones
+// Theme colors - UI-matching amber/warm palette
 const THEME_COLORS: Record<string, string> = {
-  amber: '#d4a574',
-  orange: '#c9a078', 
-  rose: '#c4a882',
-  violet: '#b8a890',
-  blue: '#a8b4c0',
-  emerald: '#8fb8a0',
-  slate: '#9ca3af',
+  amber: '#f59e0b',
+  orange: '#f97316',
+  rose: '#fb7185', 
+  violet: '#a78bfa',
+  blue: '#60a5fa',
+  emerald: '#34d399',
+  slate: '#94a3b8',
 }
 
-// Edge colors - more visible
-const EDGE_COLOR = 'rgba(255, 255, 255, 0.08)'
-const EDGE_HOVER_COLOR = 'rgba(212, 165, 116, 0.5)'
+// Edge colors - visible warm lines
+const EDGE_COLOR = 'rgba(245, 158, 11, 0.15)'
+const EDGE_HOVER_COLOR = 'rgba(245, 158, 11, 0.6)'
 const BG_COLOR = '#0c0c0e'
 
 function hexToRgba(hex: string, alpha: number): string {
@@ -326,8 +326,7 @@ export function GraphCanvas() {
       
       const hasHighlight = hoveredId || selectedId
       
-      // Draw edges - more visible
-      ctx.lineWidth = 0.8
+      // Draw edges - visible connecting lines
       edges.forEach(edge => {
         const minOpacity = Math.min(edge.source.opacity, edge.target.opacity)
         if (minOpacity < 0.1) return
@@ -340,13 +339,14 @@ export function GraphCanvas() {
         ctx.beginPath()
         ctx.moveTo(edge.source.x, edge.source.y)
         ctx.lineTo(edge.target.x, edge.target.y)
-        ctx.strokeStyle = isHighlighted ? EDGE_HOVER_COLOR : hasHighlight ? 'rgba(255, 255, 255, 0.03)' : EDGE_COLOR
+        ctx.strokeStyle = isHighlighted ? EDGE_HOVER_COLOR : hasHighlight ? 'rgba(245, 158, 11, 0.05)' : EDGE_COLOR
+        ctx.lineWidth = isHighlighted ? 1 : 0.5
         ctx.stroke()
       })
       
       ctx.globalAlpha = 1
       
-      // Draw nodes - refined square style with glow
+      // Draw nodes - small stroked circles with glow
       nodes.forEach(node => {
         if (node.opacity < 0.05) return
         
@@ -356,31 +356,35 @@ export function GraphCanvas() {
         const isDimmed = hasHighlight && !isConnected
         
         const themeColor = THEME_COLORS[node.thought.color] || THEME_COLORS.slate
-        const size = node.radius * (isHovered || isSelected ? 2.8 : 1.5)
+        const radius = node.radius * (isHovered || isSelected ? 2.5 : 1.2)
         
         ctx.globalAlpha = node.opacity
         
         // Outer glow for all nodes
-        const glowSize = size * (isHovered || isSelected ? 8 : 4)
-        const glowAlpha = isDimmed ? 0.05 : (isHovered || isSelected ? 0.25 : 0.12)
-        const gradient = ctx.createRadialGradient(node.x, node.y, 0, node.x, node.y, glowSize)
+        const glowRadius = radius * (isHovered || isSelected ? 10 : 5)
+        const glowAlpha = isDimmed ? 0.03 : (isHovered || isSelected ? 0.3 : 0.1)
+        const gradient = ctx.createRadialGradient(node.x, node.y, 0, node.x, node.y, glowRadius)
         gradient.addColorStop(0, hexToRgba(themeColor, glowAlpha))
-        gradient.addColorStop(0.5, hexToRgba(themeColor, glowAlpha * 0.3))
+        gradient.addColorStop(0.4, hexToRgba(themeColor, glowAlpha * 0.4))
         gradient.addColorStop(1, 'rgba(0, 0, 0, 0)')
         ctx.fillStyle = gradient
         ctx.beginPath()
-        ctx.arc(node.x, node.y, glowSize, 0, Math.PI * 2)
+        ctx.arc(node.x, node.y, glowRadius, 0, Math.PI * 2)
         ctx.fill()
         
-        // Node - small square shape
-        const halfSize = size
-        ctx.fillStyle = isDimmed ? hexToRgba(themeColor, 0.15) : hexToRgba(themeColor, 0.85)
-        ctx.fillRect(node.x - halfSize, node.y - halfSize, halfSize * 2, halfSize * 2)
+        // Node circle - stroke only, no fill
+        ctx.beginPath()
+        ctx.arc(node.x, node.y, radius, 0, Math.PI * 2)
+        ctx.strokeStyle = isDimmed ? hexToRgba(themeColor, 0.2) : hexToRgba(themeColor, 0.9)
+        ctx.lineWidth = isHovered || isSelected ? 1.5 : 1
+        ctx.stroke()
         
-        // Bright center highlight for active nodes
+        // Small center dot for active nodes
         if (!isDimmed && (isHovered || isSelected)) {
-          ctx.fillStyle = `rgba(255, 255, 255, ${0.6 * node.opacity})`
-          ctx.fillRect(node.x - halfSize * 0.5, node.y - halfSize * 0.5, halfSize, halfSize)
+          ctx.beginPath()
+          ctx.arc(node.x, node.y, radius * 0.3, 0, Math.PI * 2)
+          ctx.fillStyle = hexToRgba(themeColor, 0.8)
+          ctx.fill()
         }
       })
       

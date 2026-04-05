@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useStore, NODE_COLORS } from '@/lib/store'
 import { 
   ArrowLeft,
@@ -11,8 +11,169 @@ import {
   Hash,
   Calendar,
   Clock,
+  Pencil,
 } from 'lucide-react'
 import { format, formatDistanceToNow } from 'date-fns'
+
+// Simple markdown renderer - converts markdown to JSX
+function renderMarkdown(text: string): React.ReactNode[] {
+  const lines = text.split('\n')
+  const elements: React.ReactNode[] = []
+  let inCodeBlock = false
+  let codeContent: string[] = []
+  
+  lines.forEach((line, idx) => {
+    // Code block handling
+    if (line.startsWith('```')) {
+      if (inCodeBlock) {
+        elements.push(
+          <pre key={`code-${idx}`} className="bg-white/5 border border-white/8 p-3 text-[13px] font-mono text-white/70 overflow-x-auto my-3">
+            {codeContent.join('\n')}
+          </pre>
+        )
+        codeContent = []
+        inCodeBlock = false
+      } else {
+        inCodeBlock = true
+      }
+      return
+    }
+    
+    if (inCodeBlock) {
+      codeContent.push(line)
+      return
+    }
+    
+    // H1 heading
+    if (line.startsWith('# ')) {
+      elements.push(
+        <h1 key={idx} className="text-xl font-semibold text-white/90 mt-6 mb-3 first:mt-0">
+          {line.slice(2)}
+        </h1>
+      )
+      return
+    }
+    
+    // H2 heading
+    if (line.startsWith('## ')) {
+      elements.push(
+        <h2 key={idx} className="text-lg font-medium text-white/85 mt-5 mb-2">
+          {line.slice(3)}
+        </h2>
+      )
+      return
+    }
+    
+    // H3 heading
+    if (line.startsWith('### ')) {
+      elements.push(
+        <h3 key={idx} className="text-base font-medium text-white/80 mt-4 mb-2">
+          {line.slice(4)}
+        </h3>
+      )
+      return
+    }
+    
+    // List items
+    if (line.match(/^[-*]\s/)) {
+      const content = line.slice(2)
+      elements.push(
+        <li key={idx} className="text-[15px] text-white/70 ml-4 mb-1 list-disc">
+          {formatInlineText(content)}
+        </li>
+      )
+      return
+    }
+    
+    // Numbered list
+    if (line.match(/^\d+\.\s/)) {
+      const content = line.replace(/^\d+\.\s/, '')
+      elements.push(
+        <li key={idx} className="text-[15px] text-white/70 ml-4 mb-1 list-decimal">
+          {formatInlineText(content)}
+        </li>
+      )
+      return
+    }
+    
+    // Empty line
+    if (line.trim() === '') {
+      elements.push(<div key={idx} className="h-3" />)
+      return
+    }
+    
+    // Regular paragraph
+    elements.push(
+      <p key={idx} className="text-[15px] leading-relaxed text-white/70 mb-2">
+        {formatInlineText(line)}
+      </p>
+    )
+  })
+  
+  return elements
+}
+
+// Format inline text (bold, italic, code)
+function formatInlineText(text: string): React.ReactNode {
+  // Replace **bold** with styled spans
+  const parts: React.ReactNode[] = []
+  let remaining = text
+  let keyIdx = 0
+  
+  // Handle bold
+  while (remaining.includes('**')) {
+    const start = remaining.indexOf('**')
+    const end = remaining.indexOf('**', start + 2)
+    
+    if (end === -1) break
+    
+    if (start > 0) {
+      parts.push(formatCode(remaining.slice(0, start), keyIdx++))
+    }
+    parts.push(
+      <strong key={`bold-${keyIdx++}`} className="font-semibold text-white/85">
+        {remaining.slice(start + 2, end)}
+      </strong>
+    )
+    remaining = remaining.slice(end + 2)
+  }
+  
+  if (remaining) {
+    parts.push(formatCode(remaining, keyIdx))
+  }
+  
+  return parts.length > 0 ? parts : text
+}
+
+// Format inline code
+function formatCode(text: string, baseKey: number): React.ReactNode {
+  const parts: React.ReactNode[] = []
+  let remaining = text
+  let keyIdx = baseKey
+  
+  while (remaining.includes('`')) {
+    const start = remaining.indexOf('`')
+    const end = remaining.indexOf('`', start + 1)
+    
+    if (end === -1) break
+    
+    if (start > 0) {
+      parts.push(remaining.slice(0, start))
+    }
+    parts.push(
+      <code key={`code-${keyIdx++}`} className="px-1.5 py-0.5 bg-white/8 text-amber-400/90 text-[13px] font-mono">
+        {remaining.slice(start + 1, end)}
+      </code>
+    )
+    remaining = remaining.slice(end + 1)
+  }
+  
+  if (remaining) {
+    parts.push(remaining)
+  }
+  
+  return parts.length > 0 ? parts : text
+}
 
 export function ThoughtEditor() {
   const selectedId = useStore(s => s.selectedThoughtId)
@@ -31,6 +192,7 @@ export function ThoughtEditor() {
   const [title, setTitle] = useState('')
   const [content, setContent] = useState('')
   const [hasChanges, setHasChanges] = useState(false)
+  const [isEditing, setIsEditing] = useState(false)
   
   // Initialize state when thought changes
   useEffect(() => {
@@ -38,6 +200,7 @@ export function ThoughtEditor() {
       setTitle(thought.title)
       setContent(thought.content)
       setHasChanges(false)
+      setIsEditing(false)
     }
   }, [thought?.id])
   
@@ -196,12 +359,41 @@ export function ThoughtEditor() {
           </div>
           
           {/* Content */}
-          <textarea
-            value={content}
-            onChange={e => handleContentChange(e.target.value)}
-            placeholder="Start writing..."
-            className="w-full min-h-[400px] text-[15px] leading-relaxed text-white/70 bg-transparent border-none outline-none resize-none placeholder:text-white/20"
-          />
+          {isEditing ? (
+            <textarea
+              value={content}
+              onChange={e => handleContentChange(e.target.value)}
+              placeholder="Start writing..."
+              className="w-full min-h-[400px] text-[15px] leading-relaxed text-white/70 bg-transparent border-none outline-none resize-none placeholder:text-white/20 font-mono"
+              autoFocus
+            />
+          ) : (
+            <div 
+              className="min-h-[400px] cursor-text"
+              onClick={() => setIsEditing(true)}
+            >
+              {content ? (
+                <div className="prose-custom">{renderMarkdown(content)}</div>
+              ) : (
+                <p className="text-white/20 text-[15px]">Click to start writing...</p>
+              )}
+            </div>
+          )}
+          
+          {/* Edit toggle */}
+          <div className="mt-6 pt-4 border-t border-white/6">
+            <button
+              onClick={() => setIsEditing(!isEditing)}
+              className={`flex items-center gap-2 px-3 py-1.5 text-[12px] transition-all duration-150 ${
+                isEditing 
+                  ? 'bg-amber-500/15 text-amber-400 border border-amber-500/30' 
+                  : 'bg-white/5 text-white/50 border border-white/8 hover:text-white/70'
+              }`}
+            >
+              <Pencil className="w-3.5 h-3.5" />
+              {isEditing ? 'Preview' : 'Edit'}
+            </button>
+          </div>
           
           {/* Linked thoughts */}
           {linkedThoughts.length > 0 && (
