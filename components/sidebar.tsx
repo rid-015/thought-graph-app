@@ -266,9 +266,9 @@ export function Sidebar() {
                   
                   {isExpanded && folderThoughts.length > 0 && (
                     <div className="ml-6 mt-0.5 space-y-0.5 border-l border-white/8 pl-2">
-                      {folderThoughts.map(thought => (
+                      {folderThoughts.map((thought, idx) => (
                         <button
-                          key={thought.id}
+                          key={`${folder.id}-${thought.id}-${idx}`}
                           onClick={() => selectThought(thought.id)}
                           className={`w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-[13px] text-left transition-all ${
                             selectedId === thought.id 
@@ -297,9 +297,9 @@ export function Sidebar() {
                 {filter === 'starred' ? 'No starred thoughts' : 'No recent thoughts'}
               </p>
             ) : (
-              filtered.map(thought => (
+              filtered.map((thought, idx) => (
                 <button
-                  key={thought.id}
+                  key={`flat-${thought.id}-${idx}`}
                   onClick={() => selectThought(thought.id)}
                   className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] text-left transition-all ${
                     selectedId === thought.id 
