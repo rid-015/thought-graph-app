@@ -41,14 +41,19 @@ export function ThoughtEditor() {
     }
   }, [thought?.id])
   
-  // Get connected thoughts
-  const linkedThoughts = thought ? connections
-    .filter(c => c.source === thought.id || c.target === thought.id)
-    .map(c => {
-      const linkedId = c.source === thought.id ? c.target : c.source
-      return thoughts.find(t => t.id === linkedId)
-    })
-    .filter(Boolean) : []
+  // Get connected thoughts (deduplicated)
+  const linkedThoughts = thought ? Array.from(
+    new Map(
+      connections
+        .filter(c => c.source === thought.id || c.target === thought.id)
+        .map(c => {
+          const linkedId = c.source === thought.id ? c.target : c.source
+          return thoughts.find(t => t.id === linkedId)
+        })
+        .filter(Boolean)
+        .map(t => [t!.id, t])
+    ).values()
+  ) : []
   
   const handleTitleChange = (value: string) => {
     setTitle(value)
@@ -209,9 +214,9 @@ export function ThoughtEditor() {
               </div>
               
               <div className="grid gap-2">
-                {linkedThoughts.map(linked => linked && (
+                {linkedThoughts.map((linked, idx) => linked && (
                   <button
-                    key={linked.id}
+                    key={`linked-${linked.id}-${idx}`}
                     onClick={() => selectThought(linked.id)}
                     className="flex items-center gap-3 p-3 text-left bg-white/3 hover:bg-white/5 rounded-lg border border-white/5 hover:border-white/8 transition-colors"
                   >
