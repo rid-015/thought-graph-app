@@ -25,20 +25,20 @@ const ATTRACTION = 0.005
 const DAMPING = 0.9
 const CENTER_GRAVITY = 0.004
 
-// Theme-oriented muted colors (amber/warm palette)
+// Theme-oriented colors - warm amber palette only
 const THEME_COLORS: Record<string, string> = {
-  amber: '#b45309',
+  amber: '#d97706',
   orange: '#c2410c', 
-  rose: '#9f1239',
-  violet: '#6d28d9',
-  blue: '#1d4ed8',
-  emerald: '#047857',
-  slate: '#475569',
+  rose: '#a16207',
+  violet: '#92400e',
+  blue: '#b45309',
+  emerald: '#a16207',
+  slate: '#78716c',
 }
 
-// Edge colors
-const EDGE_COLOR = 'rgba(255, 255, 255, 0.06)'
-const EDGE_HOVER_COLOR = 'rgba(245, 158, 11, 0.35)'
+// Edge colors - warm amber theme
+const EDGE_COLOR = 'rgba(217, 119, 6, 0.08)'
+const EDGE_HOVER_COLOR = 'rgba(217, 119, 6, 0.4)'
 const BG_COLOR = '#0c0c0e'
 
 function hexToRgba(hex: string, alpha: number): string {
@@ -482,33 +482,54 @@ export function GraphCanvas() {
         onWheel={handleWheel}
       />
       
-      {/* Tooltip overlay - like the reference image */}
+      {/* Tooltip overlay - techy HUD style */}
       {tooltip && (
         <div 
           className="absolute pointer-events-none z-50"
           style={{
-            left: tooltip.x + 16,
-            top: tooltip.y - 8,
-            transform: 'translateY(-100%)',
+            left: tooltip.x + 20,
+            top: tooltip.y,
+            transform: 'translateY(-50%)',
           }}
         >
-          <div className="bg-[#1a1a1f]/95 backdrop-blur-md border border-white/10 rounded-lg px-3 py-2 shadow-xl">
-            <div className="text-[13px] font-medium text-white/90 mb-1">
-              {tooltip.title}
-            </div>
-            <div className="flex items-center gap-3 text-[11px] text-white/50">
-              <span>{tooltip.folder}</span>
-              <span className="text-white/30">|</span>
-              <span>{tooltip.connections} connections</span>
+          {/* Connector line */}
+          <div className="absolute -left-3 top-1/2 w-3 h-px bg-amber-500/50" />
+          <div className="absolute -left-3.5 top-1/2 -translate-y-1/2 w-1.5 h-1.5 border border-amber-500/50 rotate-45" />
+          
+          {/* Main tooltip */}
+          <div className="relative">
+            {/* Corner accents */}
+            <div className="absolute -top-px -left-px w-2 h-px bg-amber-500/70" />
+            <div className="absolute -top-px -left-px w-px h-2 bg-amber-500/70" />
+            <div className="absolute -top-px -right-px w-2 h-px bg-amber-500/70" />
+            <div className="absolute -top-px -right-px w-px h-2 bg-amber-500/70" />
+            <div className="absolute -bottom-px -left-px w-2 h-px bg-amber-500/40" />
+            <div className="absolute -bottom-px -left-px w-px h-2 bg-amber-500/40" />
+            <div className="absolute -bottom-px -right-px w-2 h-px bg-amber-500/40" />
+            <div className="absolute -bottom-px -right-px w-px h-2 bg-amber-500/40" />
+            
+            <div className="bg-[#0f0f11]/95 backdrop-blur-sm border border-white/8 px-3 py-2 min-w-[140px]">
+              <div className="text-[11px] font-mono text-amber-500/80 mb-1 tracking-wider uppercase">
+                node.thought
+              </div>
+              <div className="text-[13px] font-medium text-white/90 mb-2">
+                {tooltip.title}
+              </div>
+              <div className="flex items-center gap-2 text-[10px] font-mono text-white/40">
+                <span className="text-white/25">//</span>
+                <span>{tooltip.folder}</span>
+                <span className="text-amber-500/50">|</span>
+                <span>{tooltip.connections} links</span>
+              </div>
             </div>
           </div>
         </div>
       )}
       
-      {/* Graph view indicator */}
-      <div className="absolute top-4 left-4 flex items-center gap-2 px-3 py-1.5 rounded-md bg-white/5 border border-white/8">
-        <div className="w-1.5 h-1.5 rounded-full bg-amber-500/70" />
-        <span className="text-[11px] text-white/50">Graph View</span>
+      {/* Graph view indicator - techy style */}
+      <div className="absolute top-4 left-4 flex items-center gap-2 px-3 py-1.5 bg-[#0f0f11]/80 border border-white/6">
+        <div className="w-1 h-1 bg-amber-500/80" />
+        <span className="text-[10px] font-mono text-white/40 tracking-wider uppercase">graph.view</span>
       </div>
       
       {/* Controls hint */}
