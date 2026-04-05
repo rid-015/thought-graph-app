@@ -84,45 +84,47 @@ export function Sidebar() {
   return (
     <aside className="w-64 h-full flex flex-col glass-subtle" suppressHydrationWarning>
       {/* Header */}
-      <div className="p-4 border-b border-white/8">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2.5">
-            <div className="w-6 h-6 rounded-sm bg-amber-500/15 flex items-center justify-center">
-              <Network className="w-3.5 h-3.5 text-amber-400" />
+      <div className="px-4 pt-4 pb-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="w-7 h-7 bg-amber-500/15 flex items-center justify-center">
+              <Network className="w-4 h-4 text-amber-400" />
             </div>
-            <span className="font-semibold text-sm text-white/90">Nodus</span>
+            <span className="font-semibold text-[15px] text-white/90">Nodus</span>
           </div>
           <button
             onClick={() => { setViewMode('graph'); selectThought(null) }}
-            className={`btn-icon ${viewMode === 'graph' ? 'text-amber-400 bg-amber-500/10' : ''}`}
+            className={`w-8 h-8 flex items-center justify-center transition-all duration-150 hover:bg-white/5 active:scale-95 ${viewMode === 'graph' ? 'text-amber-400 bg-amber-500/10' : 'text-white/40'}`}
             title="Graph View"
           >
             <Network className="w-4 h-4" />
           </button>
         </div>
-        
-        {/* Search */}
+      </div>
+      
+      {/* Search */}
+      <div className="px-3 pb-3">
         <div className="relative">
-          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/30" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
           <input
             type="text"
             placeholder="Search thoughts..."
             value={search}
             onChange={e => setSearch(e.target.value)}
-            className="input pl-8"
+            className="w-full h-9 pl-9 pr-3 text-sm bg-white/5 border border-white/8 text-white/80 placeholder:text-white/30 focus:outline-none focus:border-white/15 focus:bg-white/8 transition-all duration-150"
           />
         </div>
       </div>
       
       {/* Quick filters */}
-      <div className="px-3 py-2 border-b border-white/6">
-        <div className="flex gap-1">
+      <div className="px-3 pb-3">
+        <div className="flex gap-1 p-1 bg-white/3 border border-white/6">
           <button
             onClick={() => setFilter('all')}
-            className={`flex-1 flex items-center justify-center gap-1.5 px-2 py-1.5 text-[12px] rounded-sm transition-all duration-150 hover:scale-[1.02] active:scale-[0.98] ${
+            className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 text-[12px] transition-all duration-150 ${
               filter === 'all' 
                 ? 'bg-white/10 text-white/90' 
-                : 'text-white/50 hover:text-white/70 hover:bg-white/5'
+                : 'text-white/40 hover:text-white/60'
             }`}
           >
             <Folder className="w-3.5 h-3.5" />
@@ -130,21 +132,21 @@ export function Sidebar() {
           </button>
           <button
             onClick={() => setFilter('starred')}
-            className={`flex-1 flex items-center justify-center gap-1.5 px-2 py-1.5 text-[12px] rounded-sm transition-all duration-150 hover:scale-[1.02] active:scale-[0.98] ${
+            className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 text-[12px] transition-all duration-150 ${
               filter === 'starred' 
                 ? 'bg-white/10 text-white/90' 
-                : 'text-white/50 hover:text-white/70 hover:bg-white/5'
+                : 'text-white/40 hover:text-white/60'
             }`}
           >
-            <Star className={`w-3.5 h-3.5 transition-transform duration-200 ${filter === 'starred' ? 'scale-110' : ''}`} />
+            <Star className={`w-3.5 h-3.5 ${filter === 'starred' ? 'fill-current' : ''}`} />
             <span>Starred</span>
           </button>
           <button
             onClick={() => setFilter('recent')}
-            className={`flex-1 flex items-center justify-center gap-1.5 px-2 py-1.5 text-[12px] rounded-sm transition-all duration-150 hover:scale-[1.02] active:scale-[0.98] ${
+            className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 text-[12px] transition-all duration-150 ${
               filter === 'recent' 
                 ? 'bg-white/10 text-white/90' 
-                : 'text-white/50 hover:text-white/70 hover:bg-white/5'
+                : 'text-white/40 hover:text-white/60'
             }`}
           >
             <Clock className="w-3.5 h-3.5" />
@@ -155,14 +157,14 @@ export function Sidebar() {
       
       {/* Create thought */}
       {isCreating ? (
-        <div className="relative p-3 border-b border-white/6 bg-[#0c0c0e]">
+        <div className="relative mx-3 mb-3 p-3 bg-[#0a0a0c] border border-white/8">
           {/* Corner accents */}
-          <span className="absolute top-0 left-0 w-3 h-px bg-amber-500/40" />
-          <span className="absolute top-0 left-0 w-px h-3 bg-amber-500/40" />
-          <span className="absolute bottom-0 right-0 w-3 h-px bg-amber-500/20" />
-          <span className="absolute bottom-0 right-0 w-px h-3 bg-amber-500/20" />
+          <span className="absolute -top-px -left-px w-3 h-px bg-amber-500/50" />
+          <span className="absolute -top-px -left-px w-px h-3 bg-amber-500/50" />
+          <span className="absolute -bottom-px -right-px w-3 h-px bg-amber-500/30" />
+          <span className="absolute -bottom-px -right-px w-px h-3 bg-amber-500/30" />
           
-          <div className="text-[10px] text-white/40 mb-2 font-mono tracking-wide">// new.thought</div>
+          <div className="text-[10px] text-white/30 mb-2 font-mono tracking-wide">// new.thought</div>
           
           <input
             type="text"
@@ -175,11 +177,11 @@ export function Sidebar() {
           />
           
           <div className="flex items-center gap-2 mb-3">
-            <span className="text-[11px] text-white/40">Folder:</span>
+            <span className="text-[11px] text-white/30">Folder:</span>
             <select
               value={createInFolder || folders[0]?.id || ''}
               onChange={e => setCreateInFolder(e.target.value)}
-              className="flex-1 h-7 px-2 text-xs bg-white/5 border border-white/10 text-white/70 focus:outline-none focus:border-amber-500/40 transition-all duration-150"
+              className="flex-1 h-7 px-2 text-xs bg-white/5 border border-white/10 text-white/60 focus:outline-none focus:border-amber-500/40 transition-all duration-150"
             >
               {folders.map(f => (
                 <option key={f.id} value={f.id} className="bg-[#0c0c0e]">{f.name}</option>
@@ -199,17 +201,17 @@ export function Sidebar() {
             </button>
             <button
               onClick={() => { setIsCreating(false); setCreateInFolder(null) }}
-              className="flex-1 h-8 text-sm bg-white/5 border border-white/10 text-white/50 hover:bg-white/8 hover:text-white/70 active:scale-[0.98] transition-all duration-150"
+              className="flex-1 h-8 text-sm bg-white/5 border border-white/10 text-white/40 hover:bg-white/8 hover:text-white/60 active:scale-[0.98] transition-all duration-150"
             >
               Cancel
             </button>
           </div>
         </div>
       ) : (
-        <div className="px-3 py-3 border-b border-white/6">
+        <div className="px-3 pb-3">
           <button
             onClick={() => startCreating()}
-            className="group relative w-full flex items-center justify-center gap-2 h-9 bg-white/5 border border-white/10 text-white/70 text-sm hover:bg-white/8 hover:text-white/90 hover:border-white/15 active:scale-[0.98] transition-all duration-150"
+            className="group relative w-full flex items-center justify-center gap-2 h-9 bg-white/5 border border-white/8 text-white/50 text-sm hover:bg-white/8 hover:text-white/70 hover:border-white/12 active:scale-[0.98] transition-all duration-150"
           >
             {/* Corner accents - appear on hover */}
             <span className="absolute -top-px -left-px w-2 h-px bg-transparent group-hover:bg-amber-500/50 transition-colors duration-200" />
@@ -221,6 +223,9 @@ export function Sidebar() {
           </button>
         </div>
       )}
+      
+      {/* Divider */}
+      <div className="h-px bg-white/6 mx-3" />
       
       {/* Folders and thoughts */}
       <div className="flex-1 overflow-y-auto py-2">
