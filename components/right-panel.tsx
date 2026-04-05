@@ -34,16 +34,16 @@ export function RightPanel() {
   
   if (!selectedThought) {
     return (
-      <aside className="flex h-full w-80 flex-col border-l border-border bg-card">
+      <aside className="flex h-full w-80 flex-col border-l border-[#232634] bg-[#151821]">
         <div className="flex flex-1 items-center justify-center p-6">
           <div className="text-center">
-            <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-secondary">
+            <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-[#1d212b]">
               <MessageSquare className="h-5 w-5 text-muted-foreground" />
             </div>
-            <p className="font-mono text-sm text-muted-foreground">
+            <p className="font-sans text-sm text-muted-foreground">
               Select a thought to view details
             </p>
-            <p className="mt-1 font-mono text-xs text-muted-foreground/60">
+            <p className="mt-1 font-sans text-xs text-muted-foreground/60">
               or click anywhere on the graph to create one
             </p>
           </div>
@@ -77,7 +77,7 @@ export function RightPanel() {
   const unlinkedThoughts = thoughts.filter(
     t => t.id !== selectedThought.id && 
     !connectedEdges.some(e => e.source === t.id || e.target === t.id)
-  )
+  ).slice(0, 20) // Limit to 20 for performance
   
   const formatDate = (date: Date) => {
     return new Intl.DateTimeFormat('en-US', {
@@ -89,12 +89,12 @@ export function RightPanel() {
   }
 
   return (
-    <aside className="flex h-full w-80 flex-col border-l border-border bg-card">
+    <aside className="flex h-full w-80 flex-col border-l border-[#232634] bg-[#151821]">
       {/* Header */}
-      <div className="flex items-center justify-between border-b border-border px-4 py-3">
+      <div className="flex items-center justify-between border-b border-[#232634] px-4 py-3">
         <div className="flex items-center gap-2">
           <GitCommit className="h-4 w-4 text-primary" />
-          <span className="font-mono text-xs font-medium text-foreground">Thought Thread</span>
+          <span className="font-sans text-sm font-medium text-foreground">Thought Thread</span>
         </div>
         <div className="flex items-center gap-1">
           <button
@@ -120,12 +120,12 @@ export function RightPanel() {
       {/* Content */}
       <div className="flex-1 overflow-y-auto">
         {/* Title */}
-        <div className="border-b border-border p-4">
+        <div className="border-b border-[#232634] p-4">
           <input
             type="text"
             value={selectedThought.title}
             onChange={(e) => updateThought(selectedThought.id, { title: e.target.value })}
-            className="w-full bg-transparent font-mono text-sm font-medium text-foreground outline-none placeholder:text-muted-foreground"
+            className="w-full bg-transparent font-sans text-base font-medium text-foreground outline-none placeholder:text-muted-foreground"
             placeholder="Thought title..."
           />
           <div className="mt-2 flex items-center gap-2">
@@ -133,39 +133,41 @@ export function RightPanel() {
               {formatDate(selectedThought.updatedAt)}
             </span>
             {selectedThought.isDraft && (
-              <span className="rounded bg-accent/20 px-1.5 py-0.5 font-mono text-[10px] text-accent">
+              <span className="rounded bg-primary/20 px-1.5 py-0.5 font-sans text-[10px] text-primary">
                 draft
               </span>
             )}
           </div>
           {/* Tags */}
-          <div className="mt-3 flex flex-wrap gap-1.5">
-            {selectedThought.tags.map(tag => (
-              <span
-                key={tag}
-                className="rounded-full bg-secondary px-2 py-0.5 font-mono text-[10px] text-secondary-foreground"
-              >
-                #{tag}
-              </span>
-            ))}
-          </div>
+          {selectedThought.tags.length > 0 && (
+            <div className="mt-3 flex flex-wrap gap-1.5">
+              {selectedThought.tags.map(tag => (
+                <span
+                  key={tag}
+                  className="rounded-full bg-[#252a36] px-2 py-0.5 font-sans text-[10px] text-muted-foreground"
+                >
+                  #{tag}
+                </span>
+              ))}
+            </div>
+          )}
         </div>
         
         {/* Main Content */}
-        <div className="border-b border-border p-4">
+        <div className="border-b border-[#232634] p-4">
           <textarea
             value={selectedThought.content}
             onChange={(e) => updateThought(selectedThought.id, { content: e.target.value })}
-            className="min-h-[120px] w-full resize-none bg-transparent font-mono text-xs leading-relaxed text-foreground/90 outline-none placeholder:text-muted-foreground"
+            className="min-h-[100px] w-full resize-none bg-transparent font-sans text-sm leading-relaxed text-foreground/90 outline-none placeholder:text-muted-foreground"
             placeholder="Write your thoughts..."
           />
         </div>
         
         {/* Thread / Comments */}
-        <div className="border-b border-border p-4">
+        <div className="border-b border-[#232634] p-4">
           <div className="mb-3 flex items-center gap-2">
             <GitCommit className="h-3.5 w-3.5 text-muted-foreground" />
-            <span className="font-mono text-xs font-medium text-muted-foreground">
+            <span className="font-sans text-xs font-medium text-muted-foreground">
               Thought Commits ({selectedThought.comments.length})
             </span>
           </div>
@@ -173,8 +175,8 @@ export function RightPanel() {
           {selectedThought.comments.length > 0 ? (
             <div className="space-y-3">
               {selectedThought.comments.map(comment => (
-                <div key={comment.id} className="border-l-2 border-border pl-3">
-                  <p className="font-mono text-xs text-foreground/80">{comment.content}</p>
+                <div key={comment.id} className="border-l-2 border-[#2a2f3d] pl-3">
+                  <p className="font-sans text-sm text-foreground/80">{comment.content}</p>
                   <p className="mt-1 font-mono text-[10px] text-muted-foreground">
                     {formatDate(comment.timestamp)}
                   </p>
@@ -182,7 +184,7 @@ export function RightPanel() {
               ))}
             </div>
           ) : (
-            <p className="font-mono text-xs text-muted-foreground/60">No commits yet</p>
+            <p className="font-sans text-xs text-muted-foreground/60">No commits yet</p>
           )}
           
           {/* Add Comment */}
@@ -191,13 +193,13 @@ export function RightPanel() {
               value={newComment}
               onChange={(e) => setNewComment(e.target.value)}
               placeholder="Add a commit..."
-              className="w-full resize-none rounded-md border border-border bg-input px-3 py-2 font-mono text-xs text-foreground outline-none placeholder:text-muted-foreground focus:border-primary/50"
+              className="w-full resize-none rounded-md border border-[#2a2f3d] bg-[#1d212b] px-3 py-2 font-sans text-sm text-foreground outline-none placeholder:text-muted-foreground focus:border-primary/50"
               rows={2}
             />
             <button
               onClick={handleAddComment}
               disabled={!newComment.trim()}
-              className="mt-2 w-full rounded-md bg-secondary px-3 py-1.5 font-mono text-xs text-secondary-foreground transition-colors hover:bg-secondary/80 disabled:opacity-50"
+              className="mt-2 w-full rounded-md bg-[#252a36] px-3 py-2 font-sans text-xs text-foreground transition-colors hover:bg-[#2a2f3d] disabled:opacity-50"
             >
               Add Commit
             </button>
@@ -205,21 +207,21 @@ export function RightPanel() {
         </div>
         
         {/* Connections */}
-        <div className="border-b border-border p-4">
+        <div className="border-b border-[#232634] p-4">
           <div className="mb-3 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Link2 className="h-3.5 w-3.5 text-muted-foreground" />
-              <span className="font-mono text-xs font-medium text-muted-foreground">
+              <span className="font-sans text-xs font-medium text-muted-foreground">
                 Connections ({connectedThoughts.length})
               </span>
             </div>
             <button
               onClick={() => setIsLinking(!isLinking)}
               className={cn(
-                "rounded px-2 py-1 font-mono text-[10px] transition-colors",
+                "rounded px-2.5 py-1 font-sans text-xs transition-colors",
                 isLinking 
                   ? "bg-primary text-primary-foreground" 
-                  : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
+                  : "bg-[#252a36] text-muted-foreground hover:text-foreground"
               )}
             >
               {isLinking ? 'Cancel' : '+ Link'}
@@ -228,8 +230,8 @@ export function RightPanel() {
           
           {/* Link Mode */}
           {isLinking && (
-            <div className="mb-3 rounded-md border border-border bg-input p-3">
-              <p className="mb-2 font-mono text-[10px] text-muted-foreground">
+            <div className="mb-3 rounded-md border border-[#2a2f3d] bg-[#1d212b] p-3">
+              <p className="mb-2 font-sans text-[11px] text-muted-foreground">
                 Select relationship type:
               </p>
               <div className="mb-3 flex flex-wrap gap-1.5">
@@ -238,15 +240,15 @@ export function RightPanel() {
                     key={type}
                     onClick={() => setLinkType(type)}
                     className={cn(
-                      "rounded-full px-2 py-0.5 font-mono text-[10px] capitalize transition-colors",
-                      linkType === type ? relationshipColors[type] : "bg-secondary text-muted-foreground"
+                      "rounded-full px-2.5 py-0.5 font-sans text-[11px] capitalize transition-colors",
+                      linkType === type ? relationshipColors[type] : "bg-[#252a36] text-muted-foreground"
                     )}
                   >
                     {type}
                   </button>
                 ))}
               </div>
-              <p className="mb-2 font-mono text-[10px] text-muted-foreground">
+              <p className="mb-2 font-sans text-[11px] text-muted-foreground">
                 Select thought to link:
               </p>
               <div className="max-h-32 space-y-1 overflow-y-auto">
@@ -254,14 +256,20 @@ export function RightPanel() {
                   <button
                     key={t.id}
                     onClick={() => handleLink(t.id)}
-                    className="w-full rounded px-2 py-1 text-left font-mono text-xs text-foreground/80 transition-colors hover:bg-secondary"
+                    className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-left transition-colors hover:bg-[#252a36]"
                   >
-                    {t.title}
+                    <div 
+                      className="h-2 w-2 rounded-full" 
+                      style={{ backgroundColor: t.color }}
+                    />
+                    <span className="truncate font-sans text-xs text-foreground/80">
+                      {t.title}
+                    </span>
                   </button>
                 ))}
                 {unlinkedThoughts.length === 0 && (
-                  <p className="font-mono text-[10px] text-muted-foreground/60">
-                    All thoughts are connected
+                  <p className="font-sans text-[11px] text-muted-foreground/60">
+                    All nearby thoughts are connected
                   </p>
                 )}
               </div>
@@ -270,27 +278,32 @@ export function RightPanel() {
           
           {/* Connected Thoughts */}
           {connectedThoughts.length > 0 ? (
-            <div className="space-y-2">
-              {connectedThoughts.map(({ edge, thought }) => thought && (
+            <div className="space-y-1.5">
+              {connectedThoughts.slice(0, 10).map(({ edge, thought }) => thought && (
                 <button
                   key={edge.id}
                   onClick={() => selectThought(thought.id)}
-                  className="flex w-full items-center gap-2 rounded-md bg-secondary/30 px-2.5 py-2 text-left transition-colors hover:bg-secondary/50"
+                  className="flex w-full items-center gap-2 rounded-md bg-[#1d212b] px-2.5 py-2 text-left transition-colors hover:bg-[#252a36]"
                 >
                   <span className={cn(
-                    "rounded-full px-1.5 py-0.5 font-mono text-[9px] capitalize",
+                    "rounded-full px-1.5 py-0.5 font-sans text-[9px] capitalize",
                     relationshipColors[edge.type]
                   )}>
                     {edge.type}
                   </span>
-                  <span className="flex-1 truncate font-mono text-xs text-foreground/80">
+                  <span className="flex-1 truncate font-sans text-xs text-foreground/80">
                     {thought.title}
                   </span>
                 </button>
               ))}
+              {connectedThoughts.length > 10 && (
+                <p className="px-2.5 font-sans text-[11px] text-muted-foreground">
+                  +{connectedThoughts.length - 10} more connections
+                </p>
+              )}
             </div>
           ) : (
-            <p className="font-mono text-xs text-muted-foreground/60">No connections yet</p>
+            <p className="font-sans text-xs text-muted-foreground/60">No connections yet</p>
           )}
         </div>
         
@@ -298,7 +311,7 @@ export function RightPanel() {
         <div className="p-4">
           <button
             onClick={() => setShowFilters(!showFilters)}
-            className="flex w-full items-center justify-between font-mono text-xs text-muted-foreground"
+            className="flex w-full items-center justify-between font-sans text-xs text-muted-foreground"
           >
             <span>Filters & Groups</span>
             {showFilters ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
@@ -307,7 +320,7 @@ export function RightPanel() {
           {showFilters && (
             <div className="mt-3 space-y-3">
               <div>
-                <p className="mb-1.5 font-mono text-[10px] uppercase tracking-wider text-muted-foreground/60">
+                <p className="mb-1.5 font-sans text-[10px] uppercase tracking-wider text-muted-foreground/60">
                   By Connection Type
                 </p>
                 <div className="flex flex-wrap gap-1.5">
@@ -315,7 +328,7 @@ export function RightPanel() {
                     <span
                       key={type}
                       className={cn(
-                        "rounded-full px-2 py-0.5 font-mono text-[10px] capitalize",
+                        "rounded-full px-2 py-0.5 font-sans text-[10px] capitalize",
                         relationshipColors[type]
                       )}
                     >
@@ -330,12 +343,12 @@ export function RightPanel() {
       </div>
       
       {/* Footer Actions */}
-      <div className="border-t border-border p-3">
+      <div className="border-t border-[#232634] p-3">
         <button
           onClick={() => {
             deleteThought(selectedThought.id)
           }}
-          className="flex w-full items-center justify-center gap-2 rounded-md bg-destructive/10 px-3 py-2 font-mono text-xs text-destructive transition-colors hover:bg-destructive/20"
+          className="flex w-full items-center justify-center gap-2 rounded-md bg-destructive/10 px-3 py-2 font-sans text-xs text-destructive transition-colors hover:bg-destructive/20"
         >
           <Trash2 className="h-3.5 w-3.5" />
           Delete Thought

@@ -1,8 +1,9 @@
 'use client'
 
 import { useEffect, useRef, useCallback, useState } from 'react'
-import { ArrowLeft } from 'lucide-react'
-import { useThoughtStore, type Thought, type Edge } from '@/lib/thought-store'
+import { ArrowLeft, ChevronRight, Settings } from 'lucide-react'
+import { useThoughtStore, type Thought, type Edge, NODE_COLORS } from '@/lib/thought-store'
+import { cn } from '@/lib/utils'
 
 interface Node {
   id: string
@@ -11,6 +12,7 @@ interface Node {
   vx: number
   vy: number
   thought: Thought
+  radius: number
 }
 
 interface SimulationEdge {
@@ -19,8 +21,9 @@ interface SimulationEdge {
   edge: Edge
 }
 
-const NODE_RADIUS = 8
-const HOVER_RADIUS = 12
+// Edge color - reddish brown with low opacity like the reference
+const EDGE_COLOR = 'rgba(180, 100, 80, 0.25)'
+const EDGE_COLOR_HOVER = 'rgba(180, 100, 80, 0.6)'
 
 export function ForceGraph() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -28,13 +31,26 @@ export function ForceGraph() {
   const animationRef = useRef<number>()
   const nodesRef = useRef<Node[]>([])
   const edgesRef = useRef<SimulationEdge[]>([])
+  const connectionCountRef = useRef<Map<string, number>>(new Map())
   
   const [hoveredNodeId, setHoveredNodeId] = useState<string | null>(null)
   const [isDragging, setIsDragging] = useState(false)
   const [draggedNode, setDraggedNode] = useState<Node | null>(null)
-  const [transform, setTransform] = useState({ x: 0, y: 0, scale: 1 })
+  const [transform, setTransform] = useState({ x: 0, y: 0, scale: 0.8 })
   const [isPanning, setIsPanning] = useState(false)
   const [lastPanPos, setLastPanPos] = useState({ x: 0, y: 0 })
+  
+  // Control panel state
+  const [showGroups, setShowGroups] = useState(false)
+  const [showFilters, setShowFilters] = useState(false)
+  const [showColors, setShowColors] = useState(false)
+  const [showDisplay, setShowDisplay] = useState(false)
+  const [showForces, setShowForces] = useState(false)
+  
+  // Display settings
+  const [nodeSize, setNodeSize] = useState(1)
+  const [edgeOpacity, setEdgeOpacity] = useState(0.25)
+  const [showLabels, setShowLabels] = useState(false)
   
   const {
     thoughts,
@@ -49,14 +65,29 @@ export function ForceGraph() {
     updatePosition,
   } = useThoughtStore()
   
+  // Calculate connection counts
+  useEffect(() => {
+    const counts = new Map<string, number>()
+    edges.forEach(edge => {
+      counts.set(edge.source, (counts.get(edge.source) || 0) + 1)
+      counts.set(edge.target, (counts.get(edge.target) || 0) + 1)
+    })
+    connectionCountRef.current = counts
+  }, [edges])
+  
   // Initialize nodes from thoughts
   useEffect(() => {
     const existingNodes = new Map(nodesRef.current.map(n => [n.id, n]))
+    const counts = connectionCountRef.current
     
     nodesRef.current = thoughts.map(thought => {
       const existing = existingNodes.get(thought.id)
+      const connectionCount = counts.get(thought.id) || 0
+      // Radius based on connections (2-8 range, with multiplier)
+      const baseRadius = Math.max(2, Math.min(8, 2 + connectionCount * 0.5)) * nodeSize
+      
       if (existing) {
-        return { ...existing, thought }
+        return { ...existing, thought, radius: baseRadius }
       }
       return {
         id: thought.id,
@@ -65,9 +96,10 @@ export function ForceGraph() {
         vx: 0,
         vy: 0,
         thought,
+        radius: baseRadius,
       }
     })
-  }, [thoughts])
+  }, [thoughts, nodeSize])
   
   // Initialize edges
   useEffect(() => {
@@ -78,51 +110,58 @@ export function ForceGraph() {
     }).filter(e => e.source && e.target)
   }, [edges, thoughts])
   
-  // Force simulation
+  // Force simulation - very gentle to keep nodes mostly stable
   const simulate = useCallback(() => {
     const nodes = nodesRef.current
     const simEdges = edgesRef.current
     
-    const centerX = (containerRef.current?.clientWidth || 800) / 2
-    const centerY = (containerRef.current?.clientHeight || 600) / 2
+    const centerX = 600
+    const centerY = 400
     
-    // Apply forces
     nodes.forEach((node, i) => {
       if (draggedNode?.id === node.id) return
       
-      // Repulsion between nodes
+      // Very weak repulsion
       nodes.forEach((other, j) => {
         if (i === j) return
         const dx = node.x - other.x
         const dy = node.y - other.y
         const dist = Math.sqrt(dx * dx + dy * dy) || 1
-        const force = 2000 / (dist * dist)
-        node.vx += (dx / dist) * force
-        node.vy += (dy / dist) * force
+        if (dist < 50) {
+          const force = 100 / (dist * dist)
+          node.vx += (dx / dist) * force * 0.1
+          node.vy += (dy / dist) * force * 0.1
+        }
       })
       
-      // Attraction along edges
+      // Very weak edge attraction
       simEdges.forEach(({ source, target }) => {
         if (source.id !== node.id && target.id !== node.id) return
         const other = source.id === node.id ? target : source
         const dx = other.x - node.x
         const dy = other.y - node.y
         const dist = Math.sqrt(dx * dx + dy * dy) || 1
-        const idealDist = 150
-        const force = (dist - idealDist) * 0.01
-        node.vx += (dx / dist) * force
-        node.vy += (dy / dist) * force
+        const idealDist = 80
+        if (dist > idealDist * 1.5) {
+          const force = (dist - idealDist) * 0.001
+          node.vx += (dx / dist) * force
+          node.vy += (dy / dist) * force
+        }
       })
       
-      // Gentle centering force
-      node.vx += (centerX - node.x) * 0.0005
-      node.vy += (centerY - node.y) * 0.0005
+      // Very gentle centering
+      node.vx += (centerX - node.x) * 0.00005
+      node.vy += (centerY - node.y) * 0.00005
       
-      // Apply velocity with damping
-      node.vx *= 0.9
-      node.vy *= 0.9
-      node.x += node.vx
-      node.y += node.vy
+      // High damping for stability
+      node.vx *= 0.85
+      node.vy *= 0.85
+      
+      // Only move if velocity is significant
+      if (Math.abs(node.vx) > 0.01 || Math.abs(node.vy) > 0.01) {
+        node.x += node.vx
+        node.y += node.vy
+      }
     })
   }, [draggedNode])
   
@@ -138,39 +177,20 @@ export function ForceGraph() {
     canvas.height = rect.height * dpr
     ctx.scale(dpr, dpr)
     
-    // Clear
-    ctx.fillStyle = '#08080c'
+    // Clear with dark background
+    ctx.fillStyle = '#0f1115'
     ctx.fillRect(0, 0, rect.width, rect.height)
     
-    // Draw subtle grid
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.02)'
-    ctx.lineWidth = 1
-    const gridSize = 50 * transform.scale
-    const offsetX = transform.x % gridSize
-    const offsetY = transform.y % gridSize
-    
-    for (let x = offsetX; x < rect.width; x += gridSize) {
-      ctx.beginPath()
-      ctx.moveTo(x, 0)
-      ctx.lineTo(x, rect.height)
-      ctx.stroke()
-    }
-    for (let y = offsetY; y < rect.height; y += gridSize) {
-      ctx.beginPath()
-      ctx.moveTo(0, y)
-      ctx.lineTo(rect.width, y)
-      ctx.stroke()
-    }
-    
     ctx.save()
-    ctx.translate(transform.x, transform.y)
+    ctx.translate(transform.x + rect.width / 2, transform.y + rect.height / 2)
     ctx.scale(transform.scale, transform.scale)
+    ctx.translate(-600, -400)
     
     const nodes = nodesRef.current
     const simEdges = edgesRef.current
     
-    // Draw edges
-    simEdges.forEach(({ source, target, edge }) => {
+    // Draw edges first
+    simEdges.forEach(({ source, target }) => {
       const isConnected = 
         hoveredNodeId === source.id || 
         hoveredNodeId === target.id ||
@@ -181,25 +201,8 @@ export function ForceGraph() {
       ctx.moveTo(source.x, source.y)
       ctx.lineTo(target.x, target.y)
       
-      let color = 'rgba(255, 255, 255, 0.08)'
-      if (isConnected) {
-        switch (edge.type) {
-          case 'supports':
-            color = 'rgba(74, 222, 128, 0.5)'
-            break
-          case 'contradicts':
-            color = 'rgba(248, 113, 113, 0.5)'
-            break
-          case 'causes':
-            color = 'rgba(251, 146, 60, 0.5)'
-            break
-          default:
-            color = 'rgba(96, 165, 250, 0.5)'
-        }
-      }
-      
-      ctx.strokeStyle = color
-      ctx.lineWidth = isConnected ? 2 : 1
+      ctx.strokeStyle = isConnected ? EDGE_COLOR_HOVER : `rgba(180, 100, 80, ${edgeOpacity})`
+      ctx.lineWidth = isConnected ? 1.5 : 0.8
       ctx.stroke()
     })
     
@@ -216,25 +219,21 @@ export function ForceGraph() {
              (e.target.id === selectedThoughtId && e.source.id === node.id)
       )
       
-      const radius = isHovered || isSelected ? HOVER_RADIUS : NODE_RADIUS
-      const alpha = (hoveredNodeId || selectedThoughtId) && !isHovered && !isSelected && !isConnectedToHovered && !isConnectedToSelected ? 0.3 : 1
+      const radius = node.radius * (isHovered || isSelected ? 1.3 : 1)
+      const dimmed = (hoveredNodeId || selectedThoughtId) && !isHovered && !isSelected && !isConnectedToHovered && !isConnectedToSelected
+      const alpha = dimmed ? 0.2 : 1
       
-      // Glow effect
+      // Soft glow effect
       if (isHovered || isSelected) {
         const gradient = ctx.createRadialGradient(
           node.x, node.y, 0,
-          node.x, node.y, radius * 3
+          node.x, node.y, radius * 4
         )
-        const color = node.thought.color.includes('blue') ? '96, 165, 250' :
-                      node.thought.color.includes('purple') ? '167, 139, 250' :
-                      node.thought.color.includes('orange') ? '251, 146, 60' :
-                      node.thought.color.includes('cyan') ? '34, 211, 238' :
-                      '74, 222, 128'
-        gradient.addColorStop(0, `rgba(${color}, 0.4)`)
-        gradient.addColorStop(1, `rgba(${color}, 0)`)
+        gradient.addColorStop(0, node.thought.color.replace(')', `, 0.4)`).replace('rgb', 'rgba').replace('#', ''))
+        gradient.addColorStop(1, 'rgba(0, 0, 0, 0)')
         ctx.fillStyle = gradient
         ctx.beginPath()
-        ctx.arc(node.x, node.y, radius * 3, 0, Math.PI * 2)
+        ctx.arc(node.x, node.y, radius * 4, 0, Math.PI * 2)
         ctx.fill()
       }
       
@@ -242,32 +241,36 @@ export function ForceGraph() {
       ctx.beginPath()
       ctx.arc(node.x, node.y, radius, 0, Math.PI * 2)
       
-      // Color mapping
-      let fillColor = 'rgba(96, 165, 250, ' + alpha + ')'
-      if (node.thought.color.includes('purple')) {
-        fillColor = 'rgba(167, 139, 250, ' + alpha + ')'
-      } else if (node.thought.color.includes('orange')) {
-        fillColor = 'rgba(251, 146, 60, ' + alpha + ')'
-      } else if (node.thought.color.includes('cyan')) {
-        fillColor = 'rgba(34, 211, 238, ' + alpha + ')'
-      } else if (node.thought.color.includes('green')) {
-        fillColor = 'rgba(74, 222, 128, ' + alpha + ')'
+      // Parse hex color and apply alpha
+      let fillColor = node.thought.color
+      if (fillColor.startsWith('#')) {
+        const r = parseInt(fillColor.slice(1, 3), 16)
+        const g = parseInt(fillColor.slice(3, 5), 16)
+        const b = parseInt(fillColor.slice(5, 7), 16)
+        fillColor = `rgba(${r}, ${g}, ${b}, ${alpha})`
       }
       
       ctx.fillStyle = fillColor
       ctx.fill()
       
-      // Node title on hover
+      // Subtle white border on hover/select
       if (isHovered || isSelected) {
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)'
+        ctx.lineWidth = 1
+        ctx.stroke()
+      }
+      
+      // Show label on hover if enabled or always for hovered/selected
+      if ((showLabels || isHovered || isSelected) && (isHovered || isSelected)) {
         ctx.fillStyle = 'rgba(255, 255, 255, 0.9)'
-        ctx.font = '11px JetBrains Mono, monospace'
+        ctx.font = '10px Inter, sans-serif'
         ctx.textAlign = 'center'
-        ctx.fillText(node.thought.title, node.x, node.y - radius - 8)
+        ctx.fillText(node.thought.title, node.x, node.y - radius - 6)
       }
     })
     
     ctx.restore()
-  }, [transform, hoveredNodeId, selectedThoughtId])
+  }, [transform, hoveredNodeId, selectedThoughtId, edgeOpacity, showLabels])
   
   // Animation loop
   useEffect(() => {
@@ -296,13 +299,17 @@ export function ForceGraph() {
     if (!canvas) return null
     
     const rect = canvas.getBoundingClientRect()
-    const x = (clientX - rect.left - transform.x) / transform.scale
-    const y = (clientY - rect.top - transform.y) / transform.scale
+    const canvasX = clientX - rect.left
+    const canvasY = clientY - rect.top
+    
+    // Reverse transform
+    const x = (canvasX - rect.width / 2 - transform.x) / transform.scale + 600
+    const y = (canvasY - rect.height / 2 - transform.y) / transform.scale + 400
     
     for (const node of nodesRef.current) {
       const dx = node.x - x
       const dy = node.y - y
-      if (Math.sqrt(dx * dx + dy * dy) < HOVER_RADIUS) {
+      if (Math.sqrt(dx * dx + dy * dy) < node.radius + 5) {
         return node
       }
     }
@@ -324,8 +331,11 @@ export function ForceGraph() {
       if (!canvas) return
       
       const rect = canvas.getBoundingClientRect()
-      const x = (e.clientX - rect.left - transform.x) / transform.scale
-      const y = (e.clientY - rect.top - transform.y) / transform.scale
+      const canvasX = e.clientX - rect.left
+      const canvasY = e.clientY - rect.top
+      
+      const x = (canvasX - rect.width / 2 - transform.x) / transform.scale + 600
+      const y = (canvasY - rect.height / 2 - transform.y) / transform.scale + 400
       
       draggedNode.x = x
       draggedNode.y = y
@@ -350,7 +360,7 @@ export function ForceGraph() {
     }
   }, [getNodeAtPosition])
   
-  const handleMouseUp = useCallback((e: React.MouseEvent) => {
+  const handleMouseUp = useCallback(() => {
     if (isDragging && draggedNode) {
       updatePosition(draggedNode.id, draggedNode.x, draggedNode.y)
     }
@@ -370,8 +380,11 @@ export function ForceGraph() {
       if (!canvas) return
       
       const rect = canvas.getBoundingClientRect()
-      const x = (e.clientX - rect.left - transform.x) / transform.scale
-      const y = (e.clientY - rect.top - transform.y) / transform.scale
+      const canvasX = e.clientX - rect.left
+      const canvasY = e.clientY - rect.top
+      
+      const x = (canvasX - rect.width / 2 - transform.x) / transform.scale + 600
+      const y = (canvasY - rect.height / 2 - transform.y) / transform.scale + 400
       
       addThought({
         title: 'New Thought',
@@ -390,17 +403,9 @@ export function ForceGraph() {
     const node = getNodeAtPosition(e.clientX, e.clientY)
     if (node) {
       setFocusedCluster(node.id)
-      // Zoom to node
-      const canvas = canvasRef.current
-      if (!canvas) return
-      
-      const rect = canvas.getBoundingClientRect()
-      const centerX = rect.width / 2
-      const centerY = rect.height / 2
-      
       setTransform({
-        x: centerX - node.x * 1.5,
-        y: centerY - node.y * 1.5,
+        x: -node.x * 1.5 + 600,
+        y: -node.y * 1.5 + 400,
         scale: 1.5,
       })
     }
@@ -409,13 +414,13 @@ export function ForceGraph() {
   const handleWheel = useCallback((e: React.WheelEvent) => {
     e.preventDefault()
     const delta = e.deltaY > 0 ? 0.9 : 1.1
-    const newScale = Math.max(0.3, Math.min(3, transform.scale * delta))
+    const newScale = Math.max(0.2, Math.min(4, transform.scale * delta))
     
     const rect = canvasRef.current?.getBoundingClientRect()
     if (!rect) return
     
-    const mouseX = e.clientX - rect.left
-    const mouseY = e.clientY - rect.top
+    const mouseX = e.clientX - rect.left - rect.width / 2
+    const mouseY = e.clientY - rect.top - rect.height / 2
     
     setTransform(t => ({
       scale: newScale,
@@ -425,33 +430,176 @@ export function ForceGraph() {
   }, [transform.scale])
   
   const resetView = useCallback(() => {
-    setTransform({ x: 0, y: 0, scale: 1 })
+    setTransform({ x: 0, y: 0, scale: 0.8 })
     setFocusedCluster(null)
   }, [setFocusedCluster])
 
+  // Control panel section component
+  const ControlSection = ({ 
+    label, 
+    isOpen, 
+    onToggle,
+    children 
+  }: { 
+    label: string
+    isOpen: boolean
+    onToggle: () => void
+    children?: React.ReactNode
+  }) => (
+    <div>
+      <button
+        onClick={onToggle}
+        className="flex w-full items-center gap-2 py-1.5 text-sm text-primary hover:text-primary/80"
+      >
+        <ChevronRight className={cn("h-3 w-3 transition-transform", isOpen && "rotate-90")} />
+        {label}
+      </button>
+      {isOpen && children && (
+        <div className="ml-5 mt-1 space-y-2 text-xs text-muted-foreground">
+          {children}
+        </div>
+      )}
+    </div>
+  )
+
   return (
-    <div ref={containerRef} className="relative h-full w-full overflow-hidden bg-background">
+    <div ref={containerRef} className="relative h-full w-full overflow-hidden bg-[#0f1115]">
+      {/* Control panel overlay - like Obsidian */}
+      <div className="absolute left-4 top-4 z-10 flex flex-col gap-0.5 rounded-md bg-[#1a1d24]/90 p-3 backdrop-blur-sm">
+        <div className="mb-1 flex items-center gap-2 text-xs text-muted-foreground">
+          <Settings className="h-3.5 w-3.5" />
+          <span className="font-medium">Graph view</span>
+        </div>
+        
+        <ControlSection label="Groups" isOpen={showGroups} onToggle={() => setShowGroups(!showGroups)}>
+          <div className="space-y-1">
+            {['core', 'research', 'ideas', 'projects'].map(group => (
+              <label key={group} className="flex items-center gap-2">
+                <input type="checkbox" defaultChecked className="h-3 w-3 accent-primary" />
+                <span className="capitalize">{group}</span>
+              </label>
+            ))}
+          </div>
+        </ControlSection>
+        
+        <ControlSection label="Filters" isOpen={showFilters} onToggle={() => setShowFilters(!showFilters)}>
+          <div className="space-y-1">
+            <label className="flex items-center gap-2">
+              <input type="checkbox" defaultChecked className="h-3 w-3 accent-primary" />
+              <span>Show orphans</span>
+            </label>
+            <label className="flex items-center gap-2">
+              <input type="checkbox" defaultChecked className="h-3 w-3 accent-primary" />
+              <span>Show attachments</span>
+            </label>
+          </div>
+        </ControlSection>
+        
+        <ControlSection label="Colors" isOpen={showColors} onToggle={() => setShowColors(!showColors)}>
+          <div className="flex flex-wrap gap-1.5">
+            {Object.entries(NODE_COLORS).slice(0, 6).map(([name, color]) => (
+              <div
+                key={name}
+                className="h-4 w-4 rounded-full border border-white/10"
+                style={{ backgroundColor: color }}
+                title={name}
+              />
+            ))}
+          </div>
+        </ControlSection>
+        
+        <ControlSection label="Display" isOpen={showDisplay} onToggle={() => setShowDisplay(!showDisplay)}>
+          <div className="space-y-2">
+            <div>
+              <label className="mb-1 block">Node size</label>
+              <input
+                type="range"
+                min="0.5"
+                max="2"
+                step="0.1"
+                value={nodeSize}
+                onChange={(e) => setNodeSize(parseFloat(e.target.value))}
+                className="h-1 w-full accent-primary"
+              />
+            </div>
+            <div>
+              <label className="mb-1 block">Edge opacity</label>
+              <input
+                type="range"
+                min="0.1"
+                max="0.5"
+                step="0.05"
+                value={edgeOpacity}
+                onChange={(e) => setEdgeOpacity(parseFloat(e.target.value))}
+                className="h-1 w-full accent-primary"
+              />
+            </div>
+            <label className="flex items-center gap-2">
+              <input 
+                type="checkbox" 
+                checked={showLabels}
+                onChange={(e) => setShowLabels(e.target.checked)}
+                className="h-3 w-3 accent-primary" 
+              />
+              <span>Show labels</span>
+            </label>
+          </div>
+        </ControlSection>
+        
+        <ControlSection label="Forces" isOpen={showForces} onToggle={() => setShowForces(!showForces)}>
+          <div className="space-y-2">
+            <div>
+              <label className="mb-1 block">Center force</label>
+              <input
+                type="range"
+                min="0"
+                max="1"
+                step="0.1"
+                defaultValue="0.5"
+                className="h-1 w-full accent-primary"
+              />
+            </div>
+            <div>
+              <label className="mb-1 block">Repel force</label>
+              <input
+                type="range"
+                min="0"
+                max="1"
+                step="0.1"
+                defaultValue="0.3"
+                className="h-1 w-full accent-primary"
+              />
+            </div>
+          </div>
+        </ControlSection>
+      </div>
+      
       {/* Back button */}
-      {(focusedClusterId || transform.scale !== 1) && (
+      {(focusedClusterId || transform.scale !== 0.8) && (
         <button
           onClick={resetView}
-          className="absolute left-4 top-4 z-10 flex items-center gap-1.5 rounded-md bg-secondary/80 px-3 py-1.5 font-mono text-xs text-secondary-foreground backdrop-blur-sm transition-colors hover:bg-secondary"
+          className="absolute right-4 top-4 z-10 flex items-center gap-1.5 rounded-md bg-[#1a1d24]/90 px-3 py-1.5 text-xs text-muted-foreground backdrop-blur-sm transition-colors hover:text-foreground"
         >
           <ArrowLeft className="h-3.5 w-3.5" />
-          Back to full graph
+          Reset view
         </button>
       )}
       
       {/* Creating mode indicator */}
       {isCreatingThought && (
-        <div className="absolute left-1/2 top-4 z-10 -translate-x-1/2 rounded-md bg-primary/20 px-4 py-2 font-mono text-xs text-primary backdrop-blur-sm">
+        <div className="absolute left-1/2 top-4 z-10 -translate-x-1/2 rounded-md bg-primary/20 px-4 py-2 text-xs text-primary backdrop-blur-sm">
           Click anywhere on the graph to place a new thought
         </div>
       )}
       
+      {/* Node count */}
+      <div className="absolute bottom-4 right-4 z-10 rounded-md bg-[#1a1d24]/80 px-2 py-1 text-[10px] text-muted-foreground backdrop-blur-sm">
+        {thoughts.length} nodes · {edges.length} connections
+      </div>
+      
       <canvas
         ref={canvasRef}
-        className="h-full w-full cursor-crosshair"
+        className="h-full w-full"
         style={{ 
           cursor: isCreatingThought ? 'crosshair' : hoveredNodeId ? 'pointer' : isPanning ? 'grabbing' : 'grab' 
         }}

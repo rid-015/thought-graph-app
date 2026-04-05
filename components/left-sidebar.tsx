@@ -9,7 +9,7 @@ type FilterType = 'active' | 'drafts' | 'tags' | 'starred'
 
 export function LeftSidebar() {
   const [activeFilter, setActiveFilter] = useState<FilterType>('active')
-  const { thoughts, setCreatingThought, selectThought, selectedThoughtId } = useThoughtStore()
+  const { thoughts, setCreatingThought, selectThought, selectedThoughtId, edges } = useThoughtStore()
   
   const activeThoughts = thoughts.filter(t => !t.isDraft)
   const drafts = thoughts.filter(t => t.isDraft)
@@ -30,7 +30,7 @@ export function LeftSidebar() {
   const getFilteredThoughts = () => {
     switch (activeFilter) {
       case 'active':
-        return activeThoughts
+        return activeThoughts.slice(0, 10)
       case 'drafts':
         return drafts
       case 'starred':
@@ -43,14 +43,14 @@ export function LeftSidebar() {
   const filteredThoughts = getFilteredThoughts()
 
   return (
-    <aside className="flex h-full w-56 flex-col border-r border-sidebar-border bg-sidebar">
+    <aside className="flex h-full w-60 flex-col border-r border-[#232634] bg-[#151821]">
       {/* Header */}
-      <div className="flex items-center gap-2 border-b border-sidebar-border px-4 py-3">
-        <div className="flex h-6 w-6 items-center justify-center rounded bg-primary/20">
-          <div className="h-2 w-2 rounded-full bg-primary" />
+      <div className="flex items-center gap-2.5 border-b border-[#232634] px-4 py-4">
+        <div className="flex h-7 w-7 items-center justify-center rounded-md bg-primary/10">
+          <div className="h-2.5 w-2.5 rounded-full bg-primary" />
         </div>
-        <span className="font-mono text-sm font-medium tracking-tight text-sidebar-foreground">
-          thought.graph
+        <span className="font-sans text-[15px] font-semibold tracking-tight text-foreground">
+          Thought Graph
         </span>
       </div>
       
@@ -58,9 +58,9 @@ export function LeftSidebar() {
       <div className="p-3">
         <button
           onClick={handleNewThought}
-          className="flex w-full items-center justify-center gap-2 rounded-md border border-border bg-secondary/50 px-3 py-2 font-mono text-xs text-secondary-foreground transition-colors hover:bg-secondary hover:text-foreground"
+          className="flex w-full items-center justify-center gap-2 rounded-lg border border-[#2a2f3d] bg-[#1d212b] px-3 py-2.5 font-sans text-sm text-muted-foreground transition-all hover:border-primary/30 hover:bg-[#252a36] hover:text-foreground"
         >
-          <Plus className="h-3.5 w-3.5" />
+          <Plus className="h-4 w-4" />
           New Thought
         </button>
       </div>
@@ -73,18 +73,18 @@ export function LeftSidebar() {
               key={item.id}
               onClick={() => setActiveFilter(item.id)}
               className={cn(
-                "flex w-full items-center justify-between rounded-md px-2.5 py-1.5 text-left font-mono text-xs transition-colors",
+                "flex w-full items-center justify-between rounded-lg px-3 py-2 text-left font-sans text-sm transition-colors",
                 activeFilter === item.id
-                  ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                  : "text-muted-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
+                  ? "bg-[#252a36] text-foreground"
+                  : "text-muted-foreground hover:bg-[#1d212b] hover:text-foreground"
               )}
             >
-              <span className="flex items-center gap-2">
-                <item.icon className="h-3.5 w-3.5" />
+              <span className="flex items-center gap-2.5">
+                <item.icon className="h-4 w-4" />
                 {item.label}
               </span>
               {item.count !== undefined && (
-                <span className="text-[10px] text-muted-foreground">{item.count}</span>
+                <span className="text-xs text-muted-foreground/70">{item.count}</span>
               )}
             </button>
           ))}
@@ -92,26 +92,29 @@ export function LeftSidebar() {
         
         {/* Thought List */}
         {activeFilter !== 'tags' && filteredThoughts.length > 0 && (
-          <div className="mt-4 border-t border-sidebar-border pt-3">
-            <p className="mb-2 px-2.5 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+          <div className="mt-4 border-t border-[#232634] pt-3">
+            <p className="mb-2 px-3 font-sans text-[11px] font-medium uppercase tracking-wider text-muted-foreground/60">
               {activeFilter === 'active' && 'Recent'}
               {activeFilter === 'drafts' && 'Drafts'}
               {activeFilter === 'starred' && 'Starred'}
             </p>
             <div className="space-y-0.5">
-              {filteredThoughts.slice(0, 8).map((thought) => (
+              {filteredThoughts.map((thought) => (
                 <button
                   key={thought.id}
                   onClick={() => selectThought(thought.id)}
                   className={cn(
-                    "flex w-full items-center gap-2 rounded-md px-2.5 py-1.5 text-left transition-colors",
+                    "flex w-full items-center gap-2 rounded-lg px-3 py-1.5 text-left transition-colors",
                     selectedThoughtId === thought.id
                       ? "bg-primary/10 text-primary"
-                      : "text-muted-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
+                      : "text-muted-foreground hover:bg-[#1d212b] hover:text-foreground"
                   )}
                 >
-                  <ChevronRight className="h-3 w-3 shrink-0 opacity-50" />
-                  <span className="truncate font-mono text-xs">{thought.title}</span>
+                  <div 
+                    className="h-2 w-2 shrink-0 rounded-full" 
+                    style={{ backgroundColor: thought.color }}
+                  />
+                  <span className="truncate font-sans text-[13px]">{thought.title}</span>
                 </button>
               ))}
             </div>
@@ -120,15 +123,15 @@ export function LeftSidebar() {
         
         {/* Tags List */}
         {activeFilter === 'tags' && allTags.length > 0 && (
-          <div className="mt-4 border-t border-sidebar-border pt-3">
-            <p className="mb-2 px-2.5 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+          <div className="mt-4 border-t border-[#232634] pt-3">
+            <p className="mb-2 px-3 font-sans text-[11px] font-medium uppercase tracking-wider text-muted-foreground/60">
               All Tags
             </p>
-            <div className="flex flex-wrap gap-1.5 px-2.5">
+            <div className="flex flex-wrap gap-1.5 px-3">
               {allTags.map((tag) => (
                 <span
                   key={tag}
-                  className="inline-flex items-center rounded-full bg-secondary px-2 py-0.5 font-mono text-[10px] text-secondary-foreground"
+                  className="inline-flex items-center rounded-full bg-[#252a36] px-2.5 py-1 font-sans text-[11px] text-muted-foreground"
                 >
                   #{tag}
                 </span>
@@ -139,9 +142,9 @@ export function LeftSidebar() {
       </nav>
       
       {/* Footer */}
-      <div className="border-t border-sidebar-border p-3">
-        <p className="font-mono text-[10px] text-muted-foreground">
-          {thoughts.length} thoughts · {useThoughtStore.getState().edges.length} connections
+      <div className="border-t border-[#232634] p-3">
+        <p className="font-mono text-[10px] text-muted-foreground/60">
+          {thoughts.length} thoughts · {edges.length} connections
         </p>
       </div>
     </aside>
