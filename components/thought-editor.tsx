@@ -114,9 +114,9 @@ export function ThoughtEditor() {
         <div className="flex items-center gap-4">
           <button
             onClick={handleBack}
-            className="btn-icon"
+            className="group btn-icon active:scale-95 transition-all duration-150"
           >
-            <ArrowLeft className="w-4 h-4" />
+            <ArrowLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform duration-150" />
           </button>
           
           <div className="flex items-center gap-2 text-sm text-white/50">
@@ -147,20 +147,20 @@ export function ThoughtEditor() {
           
           <button
             onClick={() => toggleStar(thought.id)}
-            className={`btn-icon ${
+            className={`group btn-icon active:scale-90 transition-all duration-150 ${
               thought.starred 
                 ? 'text-amber-400 bg-amber-400/10' 
                 : ''
             }`}
           >
-            <Star className={`w-4 h-4 ${thought.starred ? 'fill-current' : ''}`} />
+            <Star className={`w-4 h-4 group-hover:scale-110 transition-transform duration-150 ${thought.starred ? 'fill-current' : ''}`} />
           </button>
           
           <button
             onClick={handleDelete}
-            className="btn-icon hover:text-red-400 hover:bg-red-400/10"
+            className="group btn-icon hover:text-red-400 hover:bg-red-400/10 active:scale-90 transition-all duration-150"
           >
-            <Trash2 className="w-4 h-4" />
+            <Trash2 className="w-4 h-4 group-hover:scale-110 transition-transform duration-150" />
           </button>
         </div>
       </header>
@@ -218,7 +218,7 @@ export function ThoughtEditor() {
                   <button
                     key={`linked-${linked.id}-${idx}`}
                     onClick={() => selectThought(linked.id)}
-                    className="flex items-center gap-3 p-3 text-left bg-white/3 hover:bg-white/5 border border-white/6 hover:border-white/10 rounded-sm transition-all"
+                    className="group flex items-center gap-3 p-3 text-left bg-white/3 hover:bg-white/5 border border-white/6 hover:border-white/10 rounded-sm transition-all duration-150 hover:translate-x-1 active:scale-[0.99]"
                   >
                     <span
                       className="w-2 h-2 rounded-full flex-shrink-0"

@@ -97,7 +97,7 @@ export function CommitPanel() {
                 {week.map((day, dayIdx) => (
                   <div
                     key={dayIdx}
-                    className="w-[9px] h-[9px] rounded-[2px] transition-colors hover:ring-1 hover:ring-white/30"
+                    className="w-[9px] h-[9px] rounded-[2px] transition-all duration-150 hover:ring-1 hover:ring-white/30 hover:scale-125"
                     style={{ backgroundColor: getActivityColor(day.count) }}
                     title={`${format(day.date, 'MMM d, yyyy')}: ${day.count} entr${day.count !== 1 ? 'ies' : 'y'}`}
                   />
@@ -135,9 +135,9 @@ export function CommitPanel() {
           <button
             onClick={handleAddCommit}
             disabled={!newCommit.trim()}
-            className="btn-primary h-9 w-9 flex items-center justify-center p-0 disabled:opacity-30 disabled:cursor-not-allowed"
+            className="group btn-primary h-9 w-9 flex items-center justify-center p-0 disabled:opacity-30 disabled:cursor-not-allowed active:scale-95 transition-all duration-150"
           >
-            <Plus className="w-4 h-4" />
+            <Plus className="w-4 h-4 group-hover:rotate-90 transition-transform duration-200" />
           </button>
         </div>
       </div>
@@ -152,7 +152,7 @@ export function CommitPanel() {
             return (
               <div
                 key={commit.id}
-                className="group relative flex gap-3 py-2.5 px-2 rounded-sm hover:bg-white/3 transition-colors"
+                className="group relative flex gap-3 py-2.5 px-2 rounded-sm hover:bg-white/3 transition-all duration-150 hover:translate-x-0.5"
               >
                 {/* Timeline line */}
                 {idx < commits.length - 1 && (
@@ -201,17 +201,17 @@ export function CommitPanel() {
       {/* Stats footer */}
       <div className="p-4 border-t border-white/6">
         <div className="grid grid-cols-3 gap-2 text-center">
-          <div className="bg-white/3 rounded-sm py-2.5">
+          <div className="bg-white/3 rounded-sm py-2.5 hover:bg-white/5 transition-colors duration-150">
             <div className="text-sm font-medium text-white/90">{thoughts.length}</div>
             <div className="text-[9px] text-white/40">Thoughts</div>
           </div>
-          <div className="bg-white/3 rounded-sm py-2.5">
+          <div className="bg-white/3 rounded-sm py-2.5 hover:bg-white/5 transition-colors duration-150">
             <div className="text-sm font-medium text-white/90">{commits.length}</div>
             <div className="text-[9px] text-white/40">Commits</div>
           </div>
-          <div className="relative bg-amber-500/10 rounded-sm py-2.5">
-            <span className="absolute -top-px -left-px w-1.5 h-px bg-amber-500/50" />
-            <span className="absolute -top-px -left-px w-px h-1.5 bg-amber-500/50" />
+          <div className="group relative bg-amber-500/10 rounded-sm py-2.5 hover:bg-amber-500/15 transition-colors duration-150">
+            <span className="absolute -top-px -left-px w-1.5 h-px bg-amber-500/50 group-hover:w-2.5 transition-all duration-200" />
+            <span className="absolute -top-px -left-px w-px h-1.5 bg-amber-500/50 group-hover:h-2.5 transition-all duration-200" />
             <div className="text-sm font-medium text-amber-400">
               {thoughts.filter(t => t.starred).length}
             </div>

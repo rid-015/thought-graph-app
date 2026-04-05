@@ -8,7 +8,6 @@ import {
   Star, 
   Clock, 
   ChevronRight,
-  ChevronDown,
   Folder,
   FileText,
   Network,
@@ -123,7 +122,7 @@ export function Sidebar() {
         <div className="flex gap-1">
           <button
             onClick={() => setFilter('all')}
-            className={`flex-1 flex items-center justify-center gap-1.5 px-2 py-1.5 text-[12px] rounded-sm transition-all ${
+            className={`flex-1 flex items-center justify-center gap-1.5 px-2 py-1.5 text-[12px] rounded-sm transition-all duration-150 hover:scale-[1.02] active:scale-[0.98] ${
               filter === 'all' 
                 ? 'bg-white/10 text-white/90' 
                 : 'text-white/50 hover:text-white/70 hover:bg-white/5'
@@ -134,18 +133,18 @@ export function Sidebar() {
           </button>
           <button
             onClick={() => setFilter('starred')}
-            className={`flex-1 flex items-center justify-center gap-1.5 px-2 py-1.5 text-[12px] rounded-sm transition-all ${
+            className={`flex-1 flex items-center justify-center gap-1.5 px-2 py-1.5 text-[12px] rounded-sm transition-all duration-150 hover:scale-[1.02] active:scale-[0.98] ${
               filter === 'starred' 
                 ? 'bg-white/10 text-white/90' 
                 : 'text-white/50 hover:text-white/70 hover:bg-white/5'
             }`}
           >
-            <Star className="w-3.5 h-3.5" />
+            <Star className={`w-3.5 h-3.5 transition-transform duration-200 ${filter === 'starred' ? 'scale-110' : ''}`} />
             <span>Starred</span>
           </button>
           <button
             onClick={() => setFilter('recent')}
-            className={`flex-1 flex items-center justify-center gap-1.5 px-2 py-1.5 text-[12px] rounded-sm transition-all ${
+            className={`flex-1 flex items-center justify-center gap-1.5 px-2 py-1.5 text-[12px] rounded-sm transition-all duration-150 hover:scale-[1.02] active:scale-[0.98] ${
               filter === 'recent' 
                 ? 'bg-white/10 text-white/90' 
                 : 'text-white/50 hover:text-white/70 hover:bg-white/5'
@@ -212,18 +211,14 @@ export function Sidebar() {
         <div className="px-3 py-3 border-b border-white/6">
           <button
             onClick={() => startCreating()}
-            className="relative w-full flex items-center justify-center gap-2 h-9 bg-amber-500/15 border border-amber-500/30 text-amber-400 text-sm hover:bg-amber-500/20 hover:border-amber-500/40 active:bg-amber-500/25 transition-all"
+            className="group relative w-full flex items-center justify-center gap-2 h-9 bg-white/5 border border-white/10 text-white/70 text-sm hover:bg-white/8 hover:text-white/90 hover:border-white/15 active:scale-[0.98] transition-all duration-150"
           >
-            {/* Corner accents */}
-            <span className="absolute -top-px -left-px w-2 h-px bg-amber-500/60" />
-            <span className="absolute -top-px -left-px w-px h-2 bg-amber-500/60" />
-            <span className="absolute -top-px -right-px w-2 h-px bg-amber-500/60" />
-            <span className="absolute -top-px -right-px w-px h-2 bg-amber-500/60" />
-            <span className="absolute -bottom-px -left-px w-2 h-px bg-amber-500/40" />
-            <span className="absolute -bottom-px -left-px w-px h-2 bg-amber-500/40" />
-            <span className="absolute -bottom-px -right-px w-2 h-px bg-amber-500/40" />
-            <span className="absolute -bottom-px -right-px w-px h-2 bg-amber-500/40" />
-            <Plus className="w-4 h-4" />
+            {/* Corner accents - appear on hover */}
+            <span className="absolute -top-px -left-px w-2 h-px bg-transparent group-hover:bg-amber-500/50 transition-colors duration-200" />
+            <span className="absolute -top-px -left-px w-px h-2 bg-transparent group-hover:bg-amber-500/50 transition-colors duration-200" />
+            <span className="absolute -bottom-px -right-px w-2 h-px bg-transparent group-hover:bg-amber-500/30 transition-colors duration-200" />
+            <span className="absolute -bottom-px -right-px w-px h-2 bg-transparent group-hover:bg-amber-500/30 transition-colors duration-200" />
+            <Plus className="w-4 h-4 group-hover:rotate-90 transition-transform duration-200" />
             <span>New Thought</span>
           </button>
         </div>
@@ -242,16 +237,12 @@ export function Sidebar() {
                 <div key={folder.id}>
                   <div
                     onClick={() => toggleFolder(folder.id)}
-                    className="w-full flex items-center gap-2 px-2 py-2 rounded-sm text-[13px] text-white/60 hover:text-white/80 hover:bg-white/5 transition-all group cursor-pointer"
+                    className="w-full flex items-center gap-2 px-2 py-2 rounded-sm text-[13px] text-white/60 hover:text-white/80 hover:bg-white/5 transition-all duration-150 group cursor-pointer"
                     role="button"
                     tabIndex={0}
                     onKeyDown={(e) => e.key === 'Enter' && toggleFolder(folder.id)}
                   >
-                    {isExpanded ? (
-                      <ChevronDown className="w-3.5 h-3.5 text-white/30" />
-                    ) : (
-                      <ChevronRight className="w-3.5 h-3.5 text-white/30" />
-                    )}
+                    <ChevronRight className={`w-3.5 h-3.5 text-white/30 transition-transform duration-200 ${isExpanded ? 'rotate-90' : ''}`} />
                     <span
                       className="w-2 h-2 rounded-full"
                       style={{ backgroundColor: NODE_COLORS[folder.color] }}
