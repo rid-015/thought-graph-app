@@ -87,7 +87,7 @@ export function Sidebar() {
   }
   
   return (
-    <aside className="w-64 h-full flex flex-col glass-subtle">
+    <aside className="w-64 h-full flex flex-col glass-subtle" suppressHydrationWarning>
       {/* Header */}
       <div className="p-4 border-b border-white/8">
         <div className="flex items-center justify-between mb-4">

@@ -121,7 +121,7 @@ export function CommitPanel() {
       
       {/* Commit input */}
       <div className="p-3 border-b border-white/6">
-        <div className="flex gap-2">
+        <div className="flex gap-2" suppressHydrationWarning>
           <input
             type="text"
             placeholder="Log an insight..."
