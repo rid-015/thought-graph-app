@@ -6,7 +6,7 @@ import { CommitPanel } from '@/components/commit-panel'
 
 export default function CortexApp() {
   return (
-    <div className="h-screen w-screen flex overflow-hidden bg-background">
+    <div className="h-screen w-screen flex overflow-hidden bg-[#0a0a0c]">
       {/* Left sidebar - Navigation */}
       <Sidebar />
       
@@ -14,12 +14,12 @@ export default function CortexApp() {
       <main className="flex-1 relative">
         <GraphCanvas />
         
-        {/* Graph title overlay */}
+        {/* Minimal overlay */}
         <div className="absolute top-4 left-4 flex items-center gap-2 px-3 py-1.5 rounded-lg glass">
-          <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-          <span className="text-sm font-medium">Graph View</span>
-          <span className="text-xs text-muted-foreground ml-2">
-            Drag to pan · Scroll to zoom · Click nodes to select
+          <div className="w-1.5 h-1.5 rounded-full bg-white/40" />
+          <span className="text-[11px] text-white/50">Graph</span>
+          <span className="text-[10px] text-white/25 ml-1">
+            Drag to pan / Scroll to zoom
           </span>
         </div>
       </main>

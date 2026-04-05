@@ -8,17 +8,13 @@ function createSeededRandom(seed: number) {
   }
 }
 
-// Node colors matching our design system
+// Muted node colors - grayscale with subtle variation
 export const NODE_COLORS = {
-  orange: '#fb923c',
-  coral: '#fb7185',
-  green: '#4ade80',
-  blue: '#60a5fa',
-  purple: '#c084fc',
-  cyan: '#22d3ee',
-  yellow: '#fbbf24',
-  pink: '#f472b6',
-  white: '#e4e4e7',
+  gray: '#9ca3af',
+  slate: '#94a3b8',
+  zinc: '#a1a1aa',
+  neutral: '#a3a3a3',
+  stone: '#a8a29e',
 } as const
 
 export type NodeColor = keyof typeof NODE_COLORS
@@ -26,7 +22,7 @@ export type NodeColor = keyof typeof NODE_COLORS
 export interface Folder {
   id: string
   name: string
-  color: NodeColor
+  icon: string
   isExpanded: boolean
 }
 
@@ -90,84 +86,63 @@ function generateSampleData() {
   const colorKeys = Object.keys(NODE_COLORS) as NodeColor[]
   
   const folders: Folder[] = [
-    { id: 'folder-ml', name: 'Machine Learning', color: 'orange', isExpanded: true },
-    { id: 'folder-philosophy', name: 'Philosophy', color: 'purple', isExpanded: false },
-    { id: 'folder-design', name: 'Design Systems', color: 'cyan', isExpanded: false },
-    { id: 'folder-productivity', name: 'Productivity', color: 'green', isExpanded: false },
-    { id: 'folder-writing', name: 'Writing', color: 'coral', isExpanded: false },
-    { id: 'folder-music', name: 'Music Theory', color: 'yellow', isExpanded: false },
-    { id: 'folder-misc', name: 'Miscellaneous', color: 'white', isExpanded: false },
+    { id: 'folder-ml', name: 'Machine Learning', icon: 'brain', isExpanded: true },
+    { id: 'folder-philosophy', name: 'Philosophy', icon: 'scroll', isExpanded: false },
+    { id: 'folder-design', name: 'Design Systems', icon: 'palette', isExpanded: false },
+    { id: 'folder-productivity', name: 'Productivity', icon: 'zap', isExpanded: false },
+    { id: 'folder-writing', name: 'Writing', icon: 'pen', isExpanded: false },
+    { id: 'folder-music', name: 'Music Theory', icon: 'music', isExpanded: false },
+    { id: 'folder-misc', name: 'Miscellaneous', icon: 'box', isExpanded: false },
   ]
   
-  const thoughtData: Record<string, { titles: string[], color: NodeColor }> = {
-    'folder-ml': {
-      color: 'orange',
-      titles: [
-        'Neural network intuitions', 'Transformer architecture', 'Attention mechanisms',
-        'Gradient descent visualization', 'Loss functions', 'Backpropagation',
-        'Embeddings and vector spaces', 'Feature engineering', 'Model compression',
-        'Transfer learning patterns', 'Few-shot learning', 'Reinforcement learning basics',
-        'GANs and generative models', 'Diffusion models', 'LLM prompting strategies',
-        'Fine-tuning approaches', 'RAG architectures', 'Agent systems'
-      ]
-    },
-    'folder-philosophy': {
-      color: 'purple',
-      titles: [
-        'Consciousness theories', 'Free will paradox', 'Ethics of AI',
-        'Epistemology notes', 'Phenomenology intro', 'Mind-body problem',
-        'Determinism vs chaos', 'Emergence patterns', 'Systems thinking',
-        'Complexity and simplicity', 'Reductionism limits', 'Holistic approaches',
-        'Eastern philosophy', 'Stoic principles'
-      ]
-    },
-    'folder-design': {
-      color: 'cyan',
-      titles: [
-        'Color theory fundamentals', 'Typography scales', 'Spacing systems',
-        'Component architecture', 'Design tokens', 'Accessibility patterns',
-        'Motion design principles', 'Dark mode strategies', 'Responsive patterns',
-        'Icon design rules', 'Grid systems', 'Visual hierarchy',
-        'Brand consistency', 'Design documentation', 'Figma workflows', 'CSS architecture'
-      ]
-    },
-    'folder-productivity': {
-      color: 'green',
-      titles: [
-        'Deep work strategies', 'Time blocking', 'Energy management',
-        'Note-taking systems', 'Spaced repetition', 'Second brain concepts',
-        'GTD methodology', 'Pomodoro variations', 'Focus environments',
-        'Digital minimalism', 'Attention economy', 'Flow states'
-      ]
-    },
-    'folder-writing': {
-      color: 'coral',
-      titles: [
-        'Show dont tell', 'Voice and tone', 'Narrative structures',
-        'Editing techniques', 'Research methods', 'Outline strategies',
-        'Writing rituals', 'Feedback loops', 'Publishing workflows',
-        'Technical writing', 'Storytelling patterns', 'Audience analysis',
-        'Content strategy', 'SEO for writers', 'Newsletter growth'
-      ]
-    },
-    'folder-music': {
-      color: 'yellow',
-      titles: [
-        'Chord progressions', 'Modal interchange', 'Voice leading',
-        'Rhythm patterns', 'Harmonic analysis', 'Melodic contour',
-        'Song structure', 'Production techniques', 'Sound design basics', 'Mixing fundamentals'
-      ]
-    },
-    'folder-misc': {
-      color: 'white',
-      titles: [
-        'Coffee brewing methods', 'Book recommendations', 'Travel notes',
-        'Recipe ideas', 'Fitness tracking', 'Language learning',
-        'Meditation practice', 'Sleep optimization', 'Reading strategies',
-        'Journaling prompts', 'Gift ideas', 'Home organization',
-        'Plant care', 'Photography tips', 'Podcast notes'
-      ]
-    }
+  const thoughtData: Record<string, string[]> = {
+    'folder-ml': [
+      'Neural network intuitions', 'Transformer architecture', 'Attention mechanisms',
+      'Gradient descent visualization', 'Loss functions', 'Backpropagation',
+      'Embeddings and vector spaces', 'Feature engineering', 'Model compression',
+      'Transfer learning patterns', 'Few-shot learning', 'Reinforcement learning basics',
+      'GANs and generative models', 'Diffusion models', 'LLM prompting strategies',
+      'Fine-tuning approaches', 'RAG architectures', 'Agent systems'
+    ],
+    'folder-philosophy': [
+      'Consciousness theories', 'Free will paradox', 'Ethics of AI',
+      'Epistemology notes', 'Phenomenology intro', 'Mind-body problem',
+      'Determinism vs chaos', 'Emergence patterns', 'Systems thinking',
+      'Complexity and simplicity', 'Reductionism limits', 'Holistic approaches',
+      'Eastern philosophy', 'Stoic principles'
+    ],
+    'folder-design': [
+      'Color theory fundamentals', 'Typography scales', 'Spacing systems',
+      'Component architecture', 'Design tokens', 'Accessibility patterns',
+      'Motion design principles', 'Dark mode strategies', 'Responsive patterns',
+      'Icon design rules', 'Grid systems', 'Visual hierarchy',
+      'Brand consistency', 'Design documentation', 'Figma workflows', 'CSS architecture'
+    ],
+    'folder-productivity': [
+      'Deep work strategies', 'Time blocking', 'Energy management',
+      'Note-taking systems', 'Spaced repetition', 'Second brain concepts',
+      'GTD methodology', 'Pomodoro variations', 'Focus environments',
+      'Digital minimalism', 'Attention economy', 'Flow states'
+    ],
+    'folder-writing': [
+      'Show dont tell', 'Voice and tone', 'Narrative structures',
+      'Editing techniques', 'Research methods', 'Outline strategies',
+      'Writing rituals', 'Feedback loops', 'Publishing workflows',
+      'Technical writing', 'Storytelling patterns', 'Audience analysis',
+      'Content strategy', 'SEO for writers', 'Newsletter growth'
+    ],
+    'folder-music': [
+      'Chord progressions', 'Modal interchange', 'Voice leading',
+      'Rhythm patterns', 'Harmonic analysis', 'Melodic contour',
+      'Song structure', 'Production techniques', 'Sound design basics', 'Mixing fundamentals'
+    ],
+    'folder-misc': [
+      'Coffee brewing methods', 'Book recommendations', 'Travel notes',
+      'Recipe ideas', 'Fitness tracking', 'Language learning',
+      'Meditation practice', 'Sleep optimization', 'Reading strategies',
+      'Journaling prompts', 'Gift ideas', 'Home organization',
+      'Plant care', 'Photography tips', 'Podcast notes'
+    ]
   }
   
   const thoughts: Thought[] = []
@@ -179,15 +154,14 @@ function generateSampleData() {
   const baseDate = new Date('2026-04-01T12:00:00Z').getTime()
   
   // Create thoughts
-  Object.entries(thoughtData).forEach(([folderId, data]) => {
+  Object.entries(thoughtData).forEach(([folderId, titles]) => {
     thoughtsByFolder[folderId] = []
     
-    data.titles.forEach((title) => {
+    titles.forEach((title) => {
       const id = `thought-${thoughtIndex++}`
       thoughtsByFolder[folderId].push(id)
       
-      const useClusterColor = random() > 0.15
-      const color = useClusterColor ? data.color : colorKeys[Math.floor(random() * colorKeys.length)]
+      const color = colorKeys[Math.floor(random() * colorKeys.length)]
       const createdOffset = Math.floor(random() * 60) * 24 * 60 * 60 * 1000
       const updatedOffset = Math.floor(random() * 14) * 24 * 60 * 60 * 1000
       
@@ -287,14 +261,12 @@ function generateSampleData() {
       const date = new Date(today)
       date.setDate(date.getDate() - (week * 7 + (6 - day)))
       
-      // Generate activity with some patterns
       let count = 0
       const chance = activityRandom()
       if (chance > 0.4) count = Math.floor(activityRandom() * 3) + 1
       if (chance > 0.75) count = Math.floor(activityRandom() * 4) + 3
       if (chance > 0.92) count = Math.floor(activityRandom() * 5) + 6
       
-      // More activity on weekdays
       if (day >= 1 && day <= 5 && activityRandom() > 0.3) {
         count = Math.min(count + 1, 10)
       }

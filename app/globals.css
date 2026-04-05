@@ -4,64 +4,57 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  /* Premium dark palette - warm charcoal, not pure black */
-  --background: #09090b;
+  /* Minimal dark palette - single accent, muted tones */
+  --background: #0a0a0c;
   --foreground: #fafafa;
   
-  --card: #0f0f11;
+  --card: rgba(255, 255, 255, 0.03);
   --card-foreground: #fafafa;
   
-  --popover: #0f0f11;
+  --popover: rgba(255, 255, 255, 0.03);
   --popover-foreground: #fafafa;
   
-  --primary: #2dd4bf;
-  --primary-foreground: #09090b;
+  --primary: #6b7280;
+  --primary-foreground: #fafafa;
   
-  --secondary: #18181b;
+  --secondary: rgba(255, 255, 255, 0.05);
   --secondary-foreground: #fafafa;
   
-  --muted: #27272a;
-  --muted-foreground: #a1a1aa;
+  --muted: rgba(255, 255, 255, 0.06);
+  --muted-foreground: #71717a;
   
-  --accent: #18181b;
+  --accent: rgba(255, 255, 255, 0.08);
   --accent-foreground: #fafafa;
   
-  --destructive: #ef4444;
+  --destructive: #7f1d1d;
   --destructive-foreground: #fafafa;
   
-  --border: #27272a;
-  --input: #27272a;
-  --ring: #2dd4bf;
-  --radius: 0.5rem;
+  --border: rgba(255, 255, 255, 0.08);
+  --input: rgba(255, 255, 255, 0.06);
+  --ring: rgba(255, 255, 255, 0.2);
+  --radius: 0.75rem;
   
-  /* Graph node colors - vibrant but sophisticated */
-  --node-orange: #fb923c;
-  --node-coral: #fb7185;
-  --node-green: #4ade80;
-  --node-blue: #60a5fa;
-  --node-purple: #c084fc;
-  --node-cyan: #22d3ee;
-  --node-yellow: #fbbf24;
-  --node-pink: #f472b6;
-  --node-white: #e4e4e7;
+  /* Muted node colors - low saturation */
+  --node-gray: #9ca3af;
+  --node-slate: #94a3b8;
+  --node-zinc: #a1a1aa;
+  --node-neutral: #a3a3a3;
+  --node-stone: #a8a29e;
   
   /* Sidebar */
-  --sidebar: #0f0f11;
+  --sidebar: rgba(255, 255, 255, 0.02);
   --sidebar-foreground: #fafafa;
-  --sidebar-primary: #2dd4bf;
-  --sidebar-primary-foreground: #09090b;
-  --sidebar-accent: #18181b;
+  --sidebar-primary: #9ca3af;
+  --sidebar-primary-foreground: #0a0a0c;
+  --sidebar-accent: rgba(255, 255, 255, 0.05);
   --sidebar-accent-foreground: #fafafa;
-  --sidebar-border: #27272a;
-  --sidebar-ring: #2dd4bf;
-  
-  /* Edge color for graph */
-  --edge-color: rgba(251, 146, 60, 0.25);
+  --sidebar-border: rgba(255, 255, 255, 0.06);
+  --sidebar-ring: rgba(255, 255, 255, 0.2);
 }
 
 @theme inline {
-  --font-sans: var(--font-inter), system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  --font-mono: var(--font-jetbrains-mono), 'JetBrains Mono', 'SF Mono', Menlo, monospace;
+  --font-sans: var(--font-geist-sans), system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-mono: var(--font-geist-mono), 'SF Mono', Menlo, monospace;
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -81,10 +74,10 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
-  --radius-sm: calc(var(--radius) - 2px);
+  --radius-sm: calc(var(--radius) - 4px);
   --radius-md: var(--radius);
-  --radius-lg: calc(var(--radius) + 2px);
-  --radius-xl: calc(var(--radius) + 4px);
+  --radius-lg: calc(var(--radius) + 4px);
+  --radius-xl: calc(var(--radius) + 8px);
   --color-sidebar: var(--sidebar);
   --color-sidebar-foreground: var(--sidebar-foreground);
   --color-sidebar-primary: var(--sidebar-primary);
@@ -104,14 +97,14 @@
     font-feature-settings: "ss01", "ss02", "cv01";
   }
   ::selection {
-    background: rgba(45, 212, 191, 0.2);
+    background: rgba(156, 163, 175, 0.2);
   }
 }
 
-/* Premium scrollbar */
+/* Minimal scrollbar */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 4px;
+  height: 4px;
 }
 
 ::-webkit-scrollbar-track {
@@ -119,31 +112,32 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #3f3f46;
-  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #52525b;
+  background: rgba(255, 255, 255, 0.15);
 }
 
-/* Utility classes */
+/* Glassmorphism utilities */
 @layer utilities {
   .glass {
-    background: rgba(15, 15, 17, 0.8);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
+    background: rgba(255, 255, 255, 0.03);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.06);
   }
   
-  .glow-primary {
-    box-shadow: 0 0 20px rgba(45, 212, 191, 0.15);
+  .glass-subtle {
+    background: rgba(255, 255, 255, 0.02);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.04);
   }
   
-  .transition-fast {
-    transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
-  }
-  
-  .transition-smooth {
-    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  .glass-hover:hover {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.08);
   }
 }

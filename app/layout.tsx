@@ -1,21 +1,21 @@
 import type { Metadata, Viewport } from 'next'
-import { Inter, JetBrains_Mono } from 'next/font/google'
+import { Geist, Geist_Mono } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import './globals.css'
 
-const inter = Inter({ 
+const geistSans = Geist({ 
   subsets: ["latin"],
-  variable: '--font-inter',
+  variable: '--font-geist-sans',
 })
 
-const jetbrainsMono = JetBrains_Mono({ 
+const geistMono = Geist_Mono({ 
   subsets: ["latin"],
-  variable: '--font-jetbrains-mono',
+  variable: '--font-geist-mono',
 })
 
 export const metadata: Metadata = {
-  title: 'Cortex - Think in Graphs',
-  description: 'A premium graph-based thinking tool. Commit your thoughts, visualize connections, evolve your ideas.',
+  title: 'Cortex',
+  description: 'A minimal graph-based thinking tool.',
   generator: 'v0.app',
   icons: {
     icon: [
@@ -37,7 +37,7 @@ export const metadata: Metadata = {
 }
 
 export const viewport: Viewport = {
-  themeColor: '#09090b',
+  themeColor: '#0a0a0c',
   colorScheme: 'dark',
 }
 
@@ -48,7 +48,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="dark">
-      <body className={`${inter.variable} ${jetbrainsMono.variable} font-sans`}>
+      <body className={`${geistSans.variable} ${geistMono.variable} font-sans`}>
         {children}
         {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>
