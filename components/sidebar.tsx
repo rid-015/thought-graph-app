@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { useStore, NODE_COLORS, type NodeColor } from '@/lib/store'
+import { useStore, NODE_COLORS } from '@/lib/store'
 import { 
   Search, 
   Plus, 
@@ -19,7 +19,6 @@ export function Sidebar() {
   const [filter, setFilter] = useState<Filter>('all')
   const [search, setSearch] = useState('')
   const [newTitle, setNewTitle] = useState('')
-  const [selectedColor, setSelectedColor] = useState<NodeColor>('amber')
   const [createInFolder, setCreateInFolder] = useState<string | null>(null)
   
   const folders = useStore(s => s.folders)
@@ -62,7 +61,7 @@ export function Sidebar() {
         folderId,
         title: newTitle.trim(),
         content: '',
-        color: folder?.color || selectedColor,
+        color: folder?.color || 'amber',
         tags: [folderId.replace('folder-', '')],
         starred: false,
       })
@@ -79,8 +78,6 @@ export function Sidebar() {
     setIsCreating(true)
     if (folderId) {
       setCreateInFolder(folderId)
-      const folder = folders.find(f => f.id === folderId)
-      if (folder) setSelectedColor(folder.color)
     }
   }
   
@@ -158,50 +155,51 @@ export function Sidebar() {
       
       {/* Create thought */}
       {isCreating ? (
-        <div className="p-3 border-b border-white/6 bg-white/3">
+        <div className="relative p-3 border-b border-white/6 bg-[#0c0c0e]">
+          {/* Corner accents */}
+          <span className="absolute top-0 left-0 w-3 h-px bg-amber-500/40" />
+          <span className="absolute top-0 left-0 w-px h-3 bg-amber-500/40" />
+          <span className="absolute bottom-0 right-0 w-3 h-px bg-amber-500/20" />
+          <span className="absolute bottom-0 right-0 w-px h-3 bg-amber-500/20" />
+          
+          <div className="text-[10px] text-white/40 mb-2 font-mono tracking-wide">// new.thought</div>
+          
           <input
             type="text"
-            placeholder="Thought title..."
+            placeholder="Enter thought title..."
             value={newTitle}
             onChange={e => setNewTitle(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && handleCreate()}
             autoFocus
-            className="input mb-2"
+            className="w-full h-9 px-3 text-sm bg-white/5 border border-white/10 text-white/90 placeholder:text-white/30 focus:outline-none focus:border-amber-500/40 focus:bg-white/8 transition-all duration-150 mb-3"
           />
-          <div className="flex gap-1.5 mb-3">
-            {(Object.keys(NODE_COLORS) as NodeColor[]).map(color => (
-              <button
-                key={color}
-                onClick={() => setSelectedColor(color)}
-                className={`w-5 h-5 rounded-sm transition-all ${
-                  selectedColor === color 
-                    ? 'ring-2 ring-white/50 ring-offset-1 ring-offset-[#0c0c0e] scale-110' 
-                    : 'hover:scale-110 opacity-60 hover:opacity-100'
-                }`}
-                style={{ backgroundColor: NODE_COLORS[color] }}
-              />
-            ))}
+          
+          <div className="flex items-center gap-2 mb-3">
+            <span className="text-[11px] text-white/40">Folder:</span>
+            <select
+              value={createInFolder || folders[0]?.id || ''}
+              onChange={e => setCreateInFolder(e.target.value)}
+              className="flex-1 h-7 px-2 text-xs bg-white/5 border border-white/10 text-white/70 focus:outline-none focus:border-amber-500/40 transition-all duration-150"
+            >
+              {folders.map(f => (
+                <option key={f.id} value={f.id} className="bg-[#0c0c0e]">{f.name}</option>
+              ))}
+            </select>
           </div>
-          <select
-            value={createInFolder || folders[0]?.id || ''}
-            onChange={e => setCreateInFolder(e.target.value)}
-            className="input h-8 text-xs mb-3"
-          >
-            {folders.map(f => (
-              <option key={f.id} value={f.id} className="bg-[#0c0c0e]">{f.name}</option>
-            ))}
-          </select>
+          
           <div className="flex gap-2">
             <button
               onClick={handleCreate}
               disabled={!newTitle.trim()}
-              className="btn-primary flex-1 h-8 disabled:opacity-30 disabled:cursor-not-allowed"
+              className="group relative flex-1 h-8 text-sm bg-amber-500/15 border border-amber-500/30 text-amber-400 hover:bg-amber-500/20 disabled:opacity-30 disabled:cursor-not-allowed active:scale-[0.98] transition-all duration-150"
             >
+              <span className="absolute -top-px -left-px w-2 h-px bg-amber-500/50" />
+              <span className="absolute -top-px -left-px w-px h-2 bg-amber-500/50" />
               Create
             </button>
             <button
               onClick={() => { setIsCreating(false); setCreateInFolder(null) }}
-              className="btn flex-1 h-8"
+              className="flex-1 h-8 text-sm bg-white/5 border border-white/10 text-white/50 hover:bg-white/8 hover:text-white/70 active:scale-[0.98] transition-all duration-150"
             >
               Cancel
             </button>
