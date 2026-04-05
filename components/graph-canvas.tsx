@@ -8,9 +8,13 @@ interface GraphNode {
   thought: Thought
   x: number
   y: number
+  targetX: number
+  targetY: number
   vx: number
   vy: number
   radius: number
+  opacity: number
+  appearDelay: number
 }
 
 interface GraphEdge {
@@ -19,11 +23,11 @@ interface GraphEdge {
   connection: Connection
 }
 
-// Physics constants
-const REPULSION = 500
-const ATTRACTION = 0.005
-const DAMPING = 0.9
-const CENTER_GRAVITY = 0.004
+// Physics constants - reduced for smoother feel
+const REPULSION = 300
+const ATTRACTION = 0.003
+const DAMPING = 0.92
+const CENTER_GRAVITY = 0.002
 
 // Theme-oriented colors - warm amber palette only
 const THEME_COLORS: Record<string, string> = {
@@ -77,6 +81,7 @@ export function GraphCanvas() {
   })
   const animationRef = useRef<number | null>(null)
   const initializedRef = useRef(false)
+  const startTimeRef = useRef(0)
   
   const [tooltip, setTooltip] = useState<TooltipData | null>(null)
   
@@ -99,6 +104,7 @@ export function GraphCanvas() {
   useEffect(() => {
     if (!containerRef.current || initializedRef.current) return
     initializedRef.current = true
+    startTimeRef.current = performance.now()
     
     const { width, height } = containerRef.current.getBoundingClientRect()
     const centerX = width / 2
@@ -113,26 +119,33 @@ export function GraphCanvas() {
     })
     connectionCountRef.current = connectionCount
     
-    // Create nodes with organic spiral distribution - SMALLER NODES
+    // Create nodes - start from center, with staggered appear delays
     const nodes: GraphNode[] = thoughts.map((thought, i) => {
-      const angle = i * 0.618 * Math.PI * 2 // Golden angle
-      const radius = 80 + Math.sqrt(i) * 30
-      const jitter = random() * 30 - 15
-      const x = centerX + Math.cos(angle) * (radius + jitter)
-      const y = centerY + Math.sin(angle) * (radius + jitter)
+      // Target positions using golden angle spiral
+      const angle = i * 0.618 * Math.PI * 2
+      const radius = 80 + Math.sqrt(i) * 28
+      const jitter = random() * 20 - 10
+      const targetX = centerX + Math.cos(angle) * (radius + jitter)
+      const targetY = centerY + Math.sin(angle) * (radius + jitter)
       
       const count = connectionCount[thought.id] || 0
-      // Smaller base radius: 2-4 instead of 3-7
-      const nodeRadius = Math.max(2, Math.min(4, 2 + count * 0.2))
+      const nodeRadius = Math.max(2, Math.min(4, 2 + count * 0.15))
+      
+      // Stagger appearance - nodes appear one by one
+      const appearDelay = i * 15 // 15ms between each node
       
       return {
         id: thought.id,
         thought,
-        x,
-        y,
+        x: centerX, // Start from center
+        y: centerY,
+        targetX,
+        targetY,
         vx: 0,
         vy: 0,
         radius: nodeRadius,
+        opacity: 0,
+        appearDelay,
       }
     })
     
@@ -173,6 +186,7 @@ export function GraphCanvas() {
       const transform = transformRef.current
       const dragState = dragStateRef.current
       const { selectedId, hoveredId } = stateRef.current
+      const elapsed = performance.now() - startTimeRef.current
       
       if (nodes.length === 0) {
         animationRef.current = requestAnimationFrame(tick)
@@ -192,30 +206,49 @@ export function GraphCanvas() {
         canvas.style.height = `${height}px`
       }
       
-      // Physics simulation
+      // Update node positions and opacity
       for (let i = 0; i < nodes.length; i++) {
-        const nodeA = nodes[i]
-        if (dragState.draggedNode?.id === nodeA.id) continue
+        const node = nodes[i]
         
-        // Center gravity
-        nodeA.vx += (centerX - nodeA.x) * CENTER_GRAVITY
-        nodeA.vy += (centerY - nodeA.y) * CENTER_GRAVITY
+        // Handle appearance animation
+        const timeSinceAppear = elapsed - node.appearDelay
+        if (timeSinceAppear > 0) {
+          // Fade in over 300ms
+          node.opacity = Math.min(1, timeSinceAppear / 300)
+          
+          // Smoothly move towards target position
+          if (timeSinceAppear < 1000) {
+            const progress = Math.min(1, timeSinceAppear / 800)
+            const ease = 1 - Math.pow(1 - progress, 3) // Ease out cubic
+            node.x = centerX + (node.targetX - centerX) * ease
+            node.y = centerY + (node.targetY - centerY) * ease
+          }
+        }
         
-        // Repulsion
+        // Skip physics for nodes still appearing or being dragged
+        if (node.opacity < 1 || dragState.draggedNode?.id === node.id) continue
+        
+        // Gentle center gravity
+        node.vx += (centerX - node.x) * CENTER_GRAVITY
+        node.vy += (centerY - node.y) * CENTER_GRAVITY
+        
+        // Repulsion from other visible nodes
         for (let j = i + 1; j < nodes.length; j++) {
           const nodeB = nodes[j]
-          const dx = nodeB.x - nodeA.x
-          const dy = nodeB.y - nodeA.y
+          if (nodeB.opacity < 0.5) continue
+          
+          const dx = nodeB.x - node.x
+          const dy = nodeB.y - node.y
           const dist = Math.sqrt(dx * dx + dy * dy) || 1
           
-          if (dist < 200) {
+          if (dist < 150) {
             const force = REPULSION / (dist * dist)
             const fx = (dx / dist) * force
             const fy = (dy / dist) * force
             
-            nodeA.vx -= fx
-            nodeA.vy -= fy
-            if (dragState.draggedNode?.id !== nodeB.id) {
+            node.vx -= fx
+            node.vy -= fy
+            if (dragState.draggedNode?.id !== nodeB.id && nodeB.opacity >= 1) {
               nodeB.vx += fx
               nodeB.vy += fy
             }
@@ -223,13 +256,15 @@ export function GraphCanvas() {
         }
       }
       
-      // Edge attraction
+      // Edge attraction (only for fully visible nodes)
       edges.forEach(edge => {
+        if (edge.source.opacity < 1 || edge.target.opacity < 1) return
+        
         const dx = edge.target.x - edge.source.x
         const dy = edge.target.y - edge.source.y
         const dist = Math.sqrt(dx * dx + dy * dy) || 1
         
-        const force = (dist - 60) * ATTRACTION
+        const force = (dist - 50) * ATTRACTION
         const fx = (dx / dist) * force
         const fy = (dy / dist) * force
         
@@ -245,7 +280,7 @@ export function GraphCanvas() {
       
       // Update positions
       nodes.forEach(node => {
-        if (dragState.draggedNode?.id === node.id) return
+        if (dragState.draggedNode?.id === node.id || node.opacity < 1) return
         
         node.vx *= DAMPING
         node.vy *= DAMPING
@@ -254,10 +289,10 @@ export function GraphCanvas() {
         
         // Soft bounds
         const margin = 60
-        if (node.x < margin) node.vx += (margin - node.x) * 0.04
-        if (node.x > width - margin) node.vx += (width - margin - node.x) * 0.04
-        if (node.y < margin) node.vy += (margin - node.y) * 0.04
-        if (node.y > height - margin) node.vy += (height - margin - node.y) * 0.04
+        if (node.x < margin) node.vx += (margin - node.x) * 0.02
+        if (node.x > width - margin) node.vx += (width - margin - node.x) * 0.02
+        if (node.y < margin) node.vy += (margin - node.y) * 0.02
+        if (node.y > height - margin) node.vy += (height - margin - node.y) * 0.02
       })
       
       // Render
@@ -291,13 +326,17 @@ export function GraphCanvas() {
       
       const hasHighlight = hoveredId || selectedId
       
-      // Draw edges - thinner lines
+      // Draw edges
       ctx.lineWidth = 0.5
       edges.forEach(edge => {
+        const minOpacity = Math.min(edge.source.opacity, edge.target.opacity)
+        if (minOpacity < 0.1) return
+        
         const isHighlighted = 
           (connectedToHovered.has(edge.source.id) && connectedToHovered.has(edge.target.id)) ||
           (connectedToSelected.has(edge.source.id) && connectedToSelected.has(edge.target.id))
         
+        ctx.globalAlpha = minOpacity
         ctx.beginPath()
         ctx.moveTo(edge.source.x, edge.source.y)
         ctx.lineTo(edge.target.x, edge.target.y)
@@ -305,16 +344,21 @@ export function GraphCanvas() {
         ctx.stroke()
       })
       
+      ctx.globalAlpha = 1
+      
       // Draw nodes
       nodes.forEach(node => {
+        if (node.opacity < 0.05) return
+        
         const isHovered = node.id === hoveredId
         const isSelected = node.id === selectedId
         const isConnected = connectedToHovered.has(node.id) || connectedToSelected.has(node.id)
         const isDimmed = hasHighlight && !isConnected
         
-        // Use theme-oriented color
         const themeColor = THEME_COLORS[node.thought.color] || THEME_COLORS.slate
         const radius = node.radius * (isHovered || isSelected ? 2 : 1)
+        
+        ctx.globalAlpha = node.opacity
         
         // Subtle glow for selected/hovered
         if (isHovered || isSelected) {
@@ -337,11 +381,12 @@ export function GraphCanvas() {
         if (!isDimmed) {
           ctx.beginPath()
           ctx.arc(node.x, node.y, radius * 0.4, 0, Math.PI * 2)
-          ctx.fillStyle = 'rgba(255, 255, 255, 0.6)'
+          ctx.fillStyle = `rgba(255, 255, 255, ${0.6 * node.opacity})`
           ctx.fill()
         }
       })
       
+      ctx.globalAlpha = 1
       ctx.restore()
       
       animationRef.current = requestAnimationFrame(tick)
@@ -372,9 +417,9 @@ export function GraphCanvas() {
     const nodes = nodesRef.current
     for (let i = nodes.length - 1; i >= 0; i--) {
       const node = nodes[i]
+      if (node.opacity < 0.5) continue
       const dx = x - node.x
       const dy = y - node.y
-      // Larger hit area for smaller nodes
       if (dx * dx + dy * dy < (node.radius + 12) ** 2) return node
     }
     return null
@@ -526,10 +571,10 @@ export function GraphCanvas() {
         </div>
       )}
       
-      {/* Graph view indicator - techy style */}
-      <div className="absolute top-4 left-4 flex items-center gap-2 px-3 py-1.5 bg-[#0f0f11]/80 border border-white/6">
-        <div className="w-1 h-1 bg-amber-500/80" />
-        <span className="text-[10px] font-mono text-white/40 tracking-wider uppercase">graph.view</span>
+      {/* Graph view indicator */}
+      <div className="absolute top-4 left-4 flex items-center gap-2 px-3 py-1.5 bg-[#0f0f11]/80 border border-white/6 rounded-sm">
+        <div className="w-1.5 h-1.5 rounded-full bg-amber-500/80" />
+        <span className="text-[11px] text-white/50">Graph View</span>
       </div>
       
       {/* Controls hint */}

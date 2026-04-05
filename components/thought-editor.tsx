@@ -98,10 +98,8 @@ export function ThoughtEditor() {
           <p className="text-white/40 text-sm">No thought selected</p>
           <button
             onClick={() => setViewMode('graph')}
-            className="relative mt-4 px-4 py-2 text-sm bg-white/5 border border-white/10 text-white/70 hover:bg-white/8 transition-all"
+            className="btn-primary mt-4"
           >
-            <span className="absolute -top-px -left-px w-2 h-px bg-white/30" />
-            <span className="absolute -top-px -left-px w-px h-2 bg-white/30" />
             Back to Graph
           </button>
         </div>
@@ -116,7 +114,7 @@ export function ThoughtEditor() {
         <div className="flex items-center gap-4">
           <button
             onClick={handleBack}
-            className="p-2 text-white/40 hover:text-white/70 hover:bg-white/5 rounded-md transition-all"
+            className="btn-icon"
           >
             <ArrowLeft className="w-4 h-4" />
           </button>
@@ -140,10 +138,8 @@ export function ThoughtEditor() {
           {hasChanges && (
             <button
               onClick={handleSave}
-              className="relative flex items-center gap-1.5 px-3 py-1.5 text-sm bg-amber-500/15 border border-amber-500/30 text-amber-400 hover:bg-amber-500/20 transition-all"
+              className="btn-primary flex items-center gap-1.5 py-1.5"
             >
-              <span className="absolute -top-px -left-px w-1.5 h-px bg-amber-500/70" />
-              <span className="absolute -top-px -left-px w-px h-1.5 bg-amber-500/70" />
               <Save className="w-3.5 h-3.5" />
               Save
             </button>
@@ -151,10 +147,10 @@ export function ThoughtEditor() {
           
           <button
             onClick={() => toggleStar(thought.id)}
-            className={`p-2 rounded-md transition-all ${
+            className={`btn-icon ${
               thought.starred 
                 ? 'text-amber-400 bg-amber-400/10' 
-                : 'text-white/40 hover:text-white/70 hover:bg-white/5'
+                : ''
             }`}
           >
             <Star className={`w-4 h-4 ${thought.starred ? 'fill-current' : ''}`} />
@@ -162,7 +158,7 @@ export function ThoughtEditor() {
           
           <button
             onClick={handleDelete}
-            className="p-2 rounded-md text-white/40 hover:text-red-400 hover:bg-red-400/10 transition-all"
+            className="btn-icon hover:text-red-400 hover:bg-red-400/10"
           >
             <Trash2 className="w-4 h-4" />
           </button>
@@ -222,7 +218,7 @@ export function ThoughtEditor() {
                   <button
                     key={`linked-${linked.id}-${idx}`}
                     onClick={() => selectThought(linked.id)}
-                    className="relative flex items-center gap-3 p-3 text-left bg-white/3 hover:bg-white/5 border border-white/5 hover:border-white/10 rounded-md transition-colors group"
+                    className="flex items-center gap-3 p-3 text-left bg-white/3 hover:bg-white/5 border border-white/6 hover:border-white/10 rounded-sm transition-all"
                   >
                     <span
                       className="w-2 h-2 rounded-full flex-shrink-0"

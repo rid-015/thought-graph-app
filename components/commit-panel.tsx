@@ -76,7 +76,7 @@ export function CommitPanel() {
       {/* Header */}
       <div className="p-4 border-b border-white/6">
         <div className="flex items-center gap-2">
-          <div className="w-6 h-6 rounded-md bg-amber-500/15 flex items-center justify-center">
+          <div className="w-6 h-6 rounded-sm bg-amber-500/15 flex items-center justify-center">
             <GitCommit className="w-3.5 h-3.5 text-amber-400" />
           </div>
           <span className="text-sm font-medium text-white/80">Activity</span>
@@ -97,7 +97,7 @@ export function CommitPanel() {
                 {week.map((day, dayIdx) => (
                   <div
                     key={dayIdx}
-                    className="w-[9px] h-[9px] transition-colors hover:ring-1 hover:ring-white/30"
+                    className="w-[9px] h-[9px] rounded-[2px] transition-colors hover:ring-1 hover:ring-white/30"
                     style={{ backgroundColor: getActivityColor(day.count) }}
                     title={`${format(day.date, 'MMM d, yyyy')}: ${day.count} entr${day.count !== 1 ? 'ies' : 'y'}`}
                   />
@@ -113,7 +113,7 @@ export function CommitPanel() {
           {ACTIVITY_COLORS.map((color, i) => (
             <div
               key={i}
-              className="w-[9px] h-[9px]"
+              className="w-[9px] h-[9px] rounded-[2px]"
               style={{ backgroundColor: color }}
             />
           ))}
@@ -130,16 +130,13 @@ export function CommitPanel() {
             value={newCommit}
             onChange={e => setNewCommit(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && handleAddCommit()}
-            className="flex-1 h-9 px-3 text-sm bg-white/5 border border-white/8 rounded-md placeholder:text-white/30 text-white/80 focus:outline-none focus:border-amber-500/40"
+            className="input flex-1"
           />
           <button
             onClick={handleAddCommit}
             disabled={!newCommit.trim()}
-            className="relative h-9 w-9 flex items-center justify-center bg-amber-500/15 border border-amber-500/30 text-amber-400 hover:bg-amber-500/20 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+            className="btn-primary h-9 w-9 flex items-center justify-center p-0 disabled:opacity-30 disabled:cursor-not-allowed"
           >
-            {/* Corner accents */}
-            <span className="absolute -top-px -left-px w-1.5 h-px bg-amber-500/70" />
-            <span className="absolute -top-px -left-px w-px h-1.5 bg-amber-500/70" />
             <Plus className="w-4 h-4" />
           </button>
         </div>
@@ -155,7 +152,7 @@ export function CommitPanel() {
             return (
               <div
                 key={commit.id}
-                className="group relative flex gap-3 py-2.5 px-2 rounded-md hover:bg-white/3 transition-colors"
+                className="group relative flex gap-3 py-2.5 px-2 rounded-sm hover:bg-white/3 transition-colors"
               >
                 {/* Timeline line */}
                 {idx < commits.length - 1 && (
@@ -163,7 +160,7 @@ export function CommitPanel() {
                 )}
                 
                 {/* Icon */}
-                <div className={`relative z-10 w-5 h-5 rounded flex items-center justify-center flex-shrink-0 ${
+                <div className={`relative z-10 w-5 h-5 rounded-sm flex items-center justify-center flex-shrink-0 ${
                   commit.type === 'create' ? 'bg-emerald-500/15 text-emerald-400' :
                   commit.type === 'connect' ? 'bg-blue-500/15 text-blue-400' :
                   commit.type === 'insight' ? 'bg-amber-500/15 text-amber-400' :
@@ -178,7 +175,7 @@ export function CommitPanel() {
                     {commit.message}
                   </p>
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-[10px] text-white/30">
+                    <span className="text-[10px] text-white/30 font-mono">
                       {formatDistanceToNow(commit.timestamp, { addSuffix: true })}
                     </span>
                     {thought && (
@@ -204,16 +201,15 @@ export function CommitPanel() {
       {/* Stats footer */}
       <div className="p-4 border-t border-white/6">
         <div className="grid grid-cols-3 gap-2 text-center">
-          <div className="relative bg-white/3 rounded-md py-2.5">
+          <div className="bg-white/3 rounded-sm py-2.5">
             <div className="text-sm font-medium text-white/90">{thoughts.length}</div>
             <div className="text-[9px] text-white/40">Thoughts</div>
           </div>
-          <div className="relative bg-white/3 rounded-md py-2.5">
+          <div className="bg-white/3 rounded-sm py-2.5">
             <div className="text-sm font-medium text-white/90">{commits.length}</div>
             <div className="text-[9px] text-white/40">Commits</div>
           </div>
-          <div className="relative bg-amber-500/10 rounded-md py-2.5">
-            {/* Corner accents */}
+          <div className="relative bg-amber-500/10 rounded-sm py-2.5">
             <span className="absolute -top-px -left-px w-1.5 h-px bg-amber-500/50" />
             <span className="absolute -top-px -left-px w-px h-1.5 bg-amber-500/50" />
             <div className="text-sm font-medium text-amber-400">

@@ -91,18 +91,14 @@ export function Sidebar() {
       <div className="p-4 border-b border-white/8">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2.5">
-            <div className="w-6 h-6 rounded-md bg-amber-500/15 flex items-center justify-center">
+            <div className="w-6 h-6 rounded-sm bg-amber-500/15 flex items-center justify-center">
               <Network className="w-3.5 h-3.5 text-amber-400" />
             </div>
             <span className="font-semibold text-sm text-white/90">Nodus</span>
           </div>
           <button
             onClick={() => { setViewMode('graph'); selectThought(null) }}
-            className={`p-2 rounded-md transition-all ${
-              viewMode === 'graph' 
-                ? 'text-amber-400 bg-amber-500/10' 
-                : 'text-white/40 hover:text-white/70 hover:bg-white/5'
-            }`}
+            className={`btn-icon ${viewMode === 'graph' ? 'text-amber-400 bg-amber-500/10' : ''}`}
             title="Graph View"
           >
             <Network className="w-4 h-4" />
@@ -117,7 +113,7 @@ export function Sidebar() {
             placeholder="Search thoughts..."
             value={search}
             onChange={e => setSearch(e.target.value)}
-            className="w-full h-9 pl-8 pr-3 text-sm bg-white/5 border border-white/8 rounded-md placeholder:text-white/30 text-white/80 focus:outline-none focus:border-white/15 transition-all"
+            className="input pl-8"
           />
         </div>
       </div>
@@ -126,11 +122,7 @@ export function Sidebar() {
       <div className="px-2 py-2 border-b border-white/6">
         <button
           onClick={() => setFilter('all')}
-          className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-md text-[13px] transition-all ${
-            filter === 'all' 
-              ? 'bg-white/8 text-white/90' 
-              : 'text-white/50 hover:text-white/70 hover:bg-white/5'
-          }`}
+          className={`btn-tab ${filter === 'all' ? 'btn-tab-active' : ''}`}
         >
           <Folder className="w-4 h-4" />
           <span>All</span>
@@ -138,11 +130,7 @@ export function Sidebar() {
         </button>
         <button
           onClick={() => setFilter('starred')}
-          className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-md text-[13px] transition-all ${
-            filter === 'starred' 
-              ? 'bg-white/8 text-white/90' 
-              : 'text-white/50 hover:text-white/70 hover:bg-white/5'
-          }`}
+          className={`btn-tab ${filter === 'starred' ? 'btn-tab-active' : ''}`}
         >
           <Star className="w-4 h-4" />
           <span>Starred</span>
@@ -152,11 +140,7 @@ export function Sidebar() {
         </button>
         <button
           onClick={() => setFilter('recent')}
-          className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-md text-[13px] transition-all ${
-            filter === 'recent' 
-              ? 'bg-white/8 text-white/90' 
-              : 'text-white/50 hover:text-white/70 hover:bg-white/5'
-          }`}
+          className={`btn-tab ${filter === 'recent' ? 'btn-tab-active' : ''}`}
         >
           <Clock className="w-4 h-4" />
           <span>Recent</span>
@@ -173,14 +157,14 @@ export function Sidebar() {
             onChange={e => setNewTitle(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && handleCreate()}
             autoFocus
-            className="w-full h-9 px-3 mb-2 text-sm bg-[#0f0f11] border border-white/10 rounded-md placeholder:text-white/30 text-white/80 focus:outline-none focus:border-amber-500/40"
+            className="input mb-2"
           />
           <div className="flex gap-1.5 mb-3">
             {(Object.keys(NODE_COLORS) as NodeColor[]).map(color => (
               <button
                 key={color}
                 onClick={() => setSelectedColor(color)}
-                className={`w-5 h-5 rounded transition-all ${
+                className={`w-5 h-5 rounded-sm transition-all ${
                   selectedColor === color 
                     ? 'ring-2 ring-white/50 ring-offset-1 ring-offset-[#0c0c0e] scale-110' 
                     : 'hover:scale-110 opacity-60 hover:opacity-100'
@@ -192,7 +176,7 @@ export function Sidebar() {
           <select
             value={createInFolder || folders[0]?.id || ''}
             onChange={e => setCreateInFolder(e.target.value)}
-            className="w-full h-8 px-2 mb-3 text-xs bg-[#0f0f11] border border-white/8 rounded-md text-white/60 focus:outline-none"
+            className="input h-8 text-xs mb-3"
           >
             {folders.map(f => (
               <option key={f.id} value={f.id} className="bg-[#0c0c0e]">{f.name}</option>
@@ -202,13 +186,13 @@ export function Sidebar() {
             <button
               onClick={handleCreate}
               disabled={!newTitle.trim()}
-              className="btn-tech-primary flex-1 h-8 rounded-none disabled:opacity-30 disabled:cursor-not-allowed"
+              className="btn-primary flex-1 h-8 disabled:opacity-30 disabled:cursor-not-allowed"
             >
               Create
             </button>
             <button
               onClick={() => { setIsCreating(false); setCreateInFolder(null) }}
-              className="btn-tech flex-1 h-8 rounded-none"
+              className="btn flex-1 h-8"
             >
               Cancel
             </button>
@@ -218,18 +202,8 @@ export function Sidebar() {
         <div className="px-3 py-3 border-b border-white/6">
           <button
             onClick={() => startCreating()}
-            className="relative w-full flex items-center justify-center gap-2 h-9 bg-amber-500/15 border border-amber-500/30 text-amber-400 text-sm font-medium hover:bg-amber-500/20 hover:border-amber-500/40 active:bg-amber-500/25 transition-all"
+            className="btn-primary w-full flex items-center justify-center gap-2 h-9"
           >
-            {/* Corner accents */}
-            <span className="absolute -top-px -left-px w-2 h-px bg-amber-500/70" />
-            <span className="absolute -top-px -left-px w-px h-2 bg-amber-500/70" />
-            <span className="absolute -top-px -right-px w-2 h-px bg-amber-500/70" />
-            <span className="absolute -top-px -right-px w-px h-2 bg-amber-500/70" />
-            <span className="absolute -bottom-px -left-px w-2 h-px bg-amber-500/50" />
-            <span className="absolute -bottom-px -left-px w-px h-2 bg-amber-500/50" />
-            <span className="absolute -bottom-px -right-px w-2 h-px bg-amber-500/50" />
-            <span className="absolute -bottom-px -right-px w-px h-2 bg-amber-500/50" />
-            
             <Plus className="w-4 h-4" />
             <span>New Thought</span>
           </button>
@@ -249,7 +223,7 @@ export function Sidebar() {
                 <div key={folder.id}>
                   <div
                     onClick={() => toggleFolder(folder.id)}
-                    className="w-full flex items-center gap-2 px-2 py-2 rounded-md text-[13px] text-white/60 hover:text-white/80 hover:bg-white/5 transition-all group cursor-pointer"
+                    className="w-full flex items-center gap-2 px-2 py-2 rounded-sm text-[13px] text-white/60 hover:text-white/80 hover:bg-white/5 transition-all group cursor-pointer"
                     role="button"
                     tabIndex={0}
                     onKeyDown={(e) => e.key === 'Enter' && toggleFolder(folder.id)}
@@ -267,7 +241,7 @@ export function Sidebar() {
                     <span className="text-[11px] text-white/30 tabular-nums">{folderThoughts.length}</span>
                     <button
                       onClick={(e) => { e.stopPropagation(); startCreating(folder.id) }}
-                      className="opacity-0 group-hover:opacity-100 p-0.5 rounded hover:bg-white/10 transition-all"
+                      className="opacity-0 group-hover:opacity-100 p-0.5 rounded-sm hover:bg-white/10 transition-all"
                     >
                       <Plus className="w-3 h-3 text-white/40" />
                     </button>
@@ -279,7 +253,7 @@ export function Sidebar() {
                         <button
                           key={`${folder.id}-${thought.id}-${idx}`}
                           onClick={() => selectThought(thought.id)}
-                          className={`w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-[13px] text-left transition-all active:bg-white/8 ${
+                          className={`w-full flex items-center gap-2 px-2 py-1.5 rounded-sm text-[13px] text-left transition-all ${
                             selectedId === thought.id 
                               ? 'bg-white/10 text-white/90 border-l-2 border-amber-500/50 -ml-[3px] pl-[11px]' 
                               : 'text-white/50 hover:text-white/70 hover:bg-white/5'
@@ -310,7 +284,7 @@ export function Sidebar() {
                 <button
                   key={`flat-${thought.id}-${idx}`}
                   onClick={() => selectThought(thought.id)}
-                  className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-md text-[13px] text-left transition-all active:bg-white/8 ${
+                  className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-sm text-[13px] text-left transition-all ${
                     selectedId === thought.id 
                       ? 'bg-white/10 text-white/90' 
                       : 'text-white/60 hover:text-white/80 hover:bg-white/5'
