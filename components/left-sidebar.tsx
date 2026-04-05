@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Plus, FileText, Edit3, Tag, Star, ChevronRight } from 'lucide-react'
+import { Plus, FileText, Edit3, Tag, Star } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useThoughtStore } from '@/lib/thought-store'
 
@@ -30,7 +30,7 @@ export function LeftSidebar() {
   const getFilteredThoughts = () => {
     switch (activeFilter) {
       case 'active':
-        return activeThoughts.slice(0, 10)
+        return activeThoughts.slice(0, 12)
       case 'drafts':
         return drafts
       case 'starred':
@@ -43,25 +43,25 @@ export function LeftSidebar() {
   const filteredThoughts = getFilteredThoughts()
 
   return (
-    <aside className="flex h-full w-60 flex-col border-r border-[#232634] bg-[#151821]">
+    <aside className="flex h-full w-60 shrink-0 flex-col border-r border-[#2E2E2E] bg-[#232323]">
       {/* Header */}
-      <div className="flex items-center gap-2.5 border-b border-[#232634] px-4 py-4">
-        <div className="flex h-7 w-7 items-center justify-center rounded-md bg-primary/10">
-          <div className="h-2.5 w-2.5 rounded-full bg-primary" />
+      <div className="flex items-center gap-2.5 border-b border-[#2E2E2E] px-4 py-4">
+        <div className="flex h-6 w-6 items-center justify-center rounded bg-[#7AA2F7]/20">
+          <div className="h-2 w-2 rounded-full bg-[#7AA2F7]" />
         </div>
-        <span className="font-sans text-[15px] font-semibold tracking-tight text-foreground">
+        <span className="text-[15px] font-semibold text-[#EAEAEA]">
           Thought Graph
         </span>
       </div>
       
-      {/* New Thought Button */}
+      {/* New Note Button */}
       <div className="p-3">
         <button
           onClick={handleNewThought}
-          className="flex w-full items-center justify-center gap-2 rounded-lg border border-[#2a2f3d] bg-[#1d212b] px-3 py-2.5 font-sans text-sm text-muted-foreground transition-all hover:border-primary/30 hover:bg-[#252a36] hover:text-foreground"
+          className="flex w-full items-center justify-center gap-2 rounded-md border border-[#2E2E2E] bg-[#2A2A2A] px-3 py-2.5 text-[14px] text-[#B0B0B0] transition-colors hover:border-[#3E3E3E] hover:bg-[#323232] hover:text-[#EAEAEA]"
         >
           <Plus className="h-4 w-4" />
-          New Thought
+          New Note
         </button>
       </div>
       
@@ -73,10 +73,10 @@ export function LeftSidebar() {
               key={item.id}
               onClick={() => setActiveFilter(item.id)}
               className={cn(
-                "flex w-full items-center justify-between rounded-lg px-3 py-2 text-left font-sans text-sm transition-colors",
+                "flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-[14px] transition-colors",
                 activeFilter === item.id
-                  ? "bg-[#252a36] text-foreground"
-                  : "text-muted-foreground hover:bg-[#1d212b] hover:text-foreground"
+                  ? "bg-[#2A2A2A] text-[#EAEAEA]"
+                  : "text-[#B0B0B0] hover:bg-[#2A2A2A] hover:text-[#EAEAEA]"
               )}
             >
               <span className="flex items-center gap-2.5">
@@ -84,7 +84,7 @@ export function LeftSidebar() {
                 {item.label}
               </span>
               {item.count !== undefined && (
-                <span className="text-xs text-muted-foreground/70">{item.count}</span>
+                <span className="text-[12px] text-[#808080]">{item.count}</span>
               )}
             </button>
           ))}
@@ -92,8 +92,8 @@ export function LeftSidebar() {
         
         {/* Thought List */}
         {activeFilter !== 'tags' && filteredThoughts.length > 0 && (
-          <div className="mt-4 border-t border-[#232634] pt-3">
-            <p className="mb-2 px-3 font-sans text-[11px] font-medium uppercase tracking-wider text-muted-foreground/60">
+          <div className="mt-4 border-t border-[#2E2E2E] pt-3">
+            <p className="mb-2 px-3 text-[11px] font-medium uppercase tracking-wider text-[#808080]">
               {activeFilter === 'active' && 'Recent'}
               {activeFilter === 'drafts' && 'Drafts'}
               {activeFilter === 'starred' && 'Starred'}
@@ -104,17 +104,17 @@ export function LeftSidebar() {
                   key={thought.id}
                   onClick={() => selectThought(thought.id)}
                   className={cn(
-                    "flex w-full items-center gap-2 rounded-lg px-3 py-1.5 text-left transition-colors",
+                    "flex w-full items-center gap-2 rounded-md px-3 py-1.5 text-left transition-colors",
                     selectedThoughtId === thought.id
-                      ? "bg-primary/10 text-primary"
-                      : "text-muted-foreground hover:bg-[#1d212b] hover:text-foreground"
+                      ? "bg-[#7AA2F7]/15 text-[#7AA2F7]"
+                      : "text-[#B0B0B0] hover:bg-[#2A2A2A] hover:text-[#EAEAEA]"
                   )}
                 >
                   <div 
                     className="h-2 w-2 shrink-0 rounded-full" 
                     style={{ backgroundColor: thought.color }}
                   />
-                  <span className="truncate font-sans text-[13px]">{thought.title}</span>
+                  <span className="truncate text-[13px]">{thought.title}</span>
                 </button>
               ))}
             </div>
@@ -123,15 +123,15 @@ export function LeftSidebar() {
         
         {/* Tags List */}
         {activeFilter === 'tags' && allTags.length > 0 && (
-          <div className="mt-4 border-t border-[#232634] pt-3">
-            <p className="mb-2 px-3 font-sans text-[11px] font-medium uppercase tracking-wider text-muted-foreground/60">
+          <div className="mt-4 border-t border-[#2E2E2E] pt-3">
+            <p className="mb-2 px-3 text-[11px] font-medium uppercase tracking-wider text-[#808080]">
               All Tags
             </p>
             <div className="flex flex-wrap gap-1.5 px-3">
               {allTags.map((tag) => (
                 <span
                   key={tag}
-                  className="inline-flex items-center rounded-full bg-[#252a36] px-2.5 py-1 font-sans text-[11px] text-muted-foreground"
+                  className="inline-flex items-center rounded-full bg-[#2A2A2A] px-2.5 py-1 text-[11px] text-[#B0B0B0]"
                 >
                   #{tag}
                 </span>
@@ -142,9 +142,9 @@ export function LeftSidebar() {
       </nav>
       
       {/* Footer */}
-      <div className="border-t border-[#232634] p-3">
-        <p className="font-mono text-[10px] text-muted-foreground/60">
-          {thoughts.length} thoughts · {edges.length} connections
+      <div className="border-t border-[#2E2E2E] p-3">
+        <p className="font-mono text-[10px] text-[#808080]">
+          {thoughts.length} notes · {edges.length} connections
         </p>
       </div>
     </aside>

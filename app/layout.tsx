@@ -1,21 +1,17 @@
 import type { Metadata, Viewport } from 'next'
-import { Inter, JetBrains_Mono } from 'next/font/google'
+import { IBM_Plex_Mono } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import './globals.css'
 
-const inter = Inter({ 
+const ibmPlexMono = IBM_Plex_Mono({ 
   subsets: ["latin"],
-  variable: '--font-inter',
-})
-
-const jetbrainsMono = JetBrains_Mono({ 
-  subsets: ["latin"],
-  variable: '--font-jetbrains-mono',
+  weight: ['400', '500'],
+  variable: '--font-ibm-plex-mono',
 })
 
 export const metadata: Metadata = {
   title: 'Thought Graph',
-  description: 'A developer tool for thinking - cognition-based note-taking with graph visualization',
+  description: 'A graph-based note system for connected thinking',
   generator: 'v0.app',
   icons: {
     icon: [
@@ -37,7 +33,7 @@ export const metadata: Metadata = {
 }
 
 export const viewport: Viewport = {
-  themeColor: '#0B0B0F',
+  themeColor: '#1E1E1E',
   colorScheme: 'dark',
 }
 
@@ -48,7 +44,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="dark">
-      <body className={`${inter.variable} ${jetbrainsMono.variable} font-sans antialiased`}>
+      <body className={`${ibmPlexMono.variable} font-sans antialiased`}>
         {children}
         {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>

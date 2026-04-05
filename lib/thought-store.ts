@@ -2,9 +2,11 @@ import { create } from 'zustand'
 
 export type RelationshipType = 'supports' | 'contradicts' | 'relates' | 'causes'
 
-export interface Comment {
+export interface GlobalCommit {
   id: string
   content: string
+  nodeId?: string
+  nodeTitle?: string
   timestamp: Date
 }
 
@@ -18,10 +20,8 @@ export interface Thought {
   tags: string[]
   starred: boolean
   isDraft: boolean
-  comments: Comment[]
   createdAt: Date
   updatedAt: Date
-  group?: string
 }
 
 export interface Edge {
@@ -34,12 +34,13 @@ export interface Edge {
 interface ThoughtState {
   thoughts: Thought[]
   edges: Edge[]
+  globalCommits: GlobalCommit[]
   selectedThoughtId: string | null
   isCreatingThought: boolean
   focusedClusterId: string | null
   
   // Actions
-  addThought: (thought: Omit<Thought, 'id' | 'createdAt' | 'updatedAt' | 'comments'>) => string
+  addThought: (thought: Omit<Thought, 'id' | 'createdAt' | 'updatedAt'>) => string
   updateThought: (id: string, updates: Partial<Thought>) => void
   deleteThought: (id: string) => void
   selectThought: (id: string | null) => void
@@ -47,7 +48,7 @@ interface ThoughtState {
   addEdge: (source: string, target: string, type: RelationshipType) => void
   removeEdge: (id: string) => void
   
-  addComment: (thoughtId: string, content: string) => void
+  addGlobalCommit: (content: string, nodeId?: string) => void
   
   setCreatingThought: (creating: boolean) => void
   setFocusedCluster: (id: string | null) => void
@@ -56,26 +57,18 @@ interface ThoughtState {
   updatePosition: (id: string, x: number, y: number) => void
 }
 
-// Color palette matching the reference image
+// Muted color palette
 export const NODE_COLORS = {
-  orange: '#e07a4f',
-  coral: '#d4605a',
-  pink: '#d175a8',
-  purple: '#9b6dcc',
-  blue: '#6b8cce',
-  lightBlue: '#88b5d4',
-  cyan: '#4ec5c1',
-  teal: '#45a088',
-  green: '#4aba8a',
-  lime: '#7ac55f',
-  yellow: '#d4b44e',
-  white: '#e8e8e8',
+  blue: '#7AA2F7',
+  purple: '#9D7CD8',
+  orange: '#E0AF68',
+  green: '#9ECE6A',
+  pink: '#F7768E',
+  cyan: '#7DCFFF',
+  white: '#C0CAF5',
 }
 
-const COLOR_KEYS = Object.keys(NODE_COLORS) as (keyof typeof NODE_COLORS)[]
-
-// Groups for clustering
-const GROUPS = ['core', 'research', 'ideas', 'projects', 'references', 'daily', 'archive']
+const COLOR_VALUES = Object.values(NODE_COLORS)
 
 // Seeded random for consistent generation
 function seededRandom(seed: number) {
@@ -83,114 +76,72 @@ function seededRandom(seed: number) {
   return x - Math.floor(x)
 }
 
-// Generate dense network of thoughts
-function generateDenseNetwork(): { thoughts: Thought[]; edges: Edge[] } {
+// Generate 40-80 nodes distributed organically
+function generateNetwork(): { thoughts: Thought[]; edges: Edge[]; globalCommits: GlobalCommit[] } {
   const thoughts: Thought[] = []
   const edges: Edge[] = []
+  const globalCommits: GlobalCommit[] = []
   
-  const nodeCount = 150
-  const centerX = 600
-  const centerY = 400
+  const nodeCount = 60
+  const centerX = 500
+  const centerY = 350
   
-  // Create clusters
+  // Create organically distributed clusters (no central bias)
   const clusters = [
-    { x: centerX, y: centerY, radius: 100, count: 40, primaryColor: 'orange' }, // Core cluster
-    { x: centerX - 250, y: centerY + 180, radius: 80, count: 25, primaryColor: 'coral' }, // Bottom left
-    { x: centerX + 280, y: centerY + 120, radius: 90, count: 30, primaryColor: 'green' }, // Right
-    { x: centerX - 150, y: centerY - 200, radius: 70, count: 20, primaryColor: 'blue' }, // Top left
-    { x: centerX + 150, y: centerY - 180, radius: 60, count: 15, primaryColor: 'purple' }, // Top right
-    { x: centerX + 350, y: centerY - 100, radius: 50, count: 12, primaryColor: 'pink' }, // Far right
-    { x: centerX - 320, y: centerY - 50, radius: 45, count: 8, primaryColor: 'white' }, // Far left
+    { x: centerX - 200, y: centerY - 150, radius: 120, count: 12 },
+    { x: centerX + 180, y: centerY - 100, radius: 100, count: 10 },
+    { x: centerX - 150, y: centerY + 150, radius: 110, count: 11 },
+    { x: centerX + 200, y: centerY + 120, radius: 90, count: 9 },
+    { x: centerX, y: centerY, radius: 80, count: 8 },
+    { x: centerX - 300, y: centerY, radius: 70, count: 5 },
+    { x: centerX + 320, y: centerY - 50, radius: 60, count: 5 },
   ]
   
   let nodeId = 0
   
   clusters.forEach((cluster, clusterIndex) => {
     for (let i = 0; i < cluster.count; i++) {
-      const angle = seededRandom(nodeId * 13) * Math.PI * 2
-      const distance = seededRandom(nodeId * 17) * cluster.radius
+      const angle = seededRandom(nodeId * 13 + 7) * Math.PI * 2
+      const distance = seededRandom(nodeId * 17 + 11) * cluster.radius * 0.9
       
-      // Vary colors within cluster but keep primary dominant
-      let color: string
-      const colorRoll = seededRandom(nodeId * 23)
-      if (colorRoll < 0.6) {
-        color = NODE_COLORS[cluster.primaryColor as keyof typeof NODE_COLORS]
-      } else if (colorRoll < 0.8) {
-        // Adjacent colors
-        const colorIdx = COLOR_KEYS.indexOf(cluster.primaryColor as keyof typeof NODE_COLORS)
-        const adjacent = COLOR_KEYS[(colorIdx + 1) % COLOR_KEYS.length]
-        color = NODE_COLORS[adjacent]
-      } else {
-        // Random accent
-        const randomKey = COLOR_KEYS[Math.floor(seededRandom(nodeId * 31) * COLOR_KEYS.length)]
-        color = NODE_COLORS[randomKey]
-      }
+      const color = COLOR_VALUES[Math.floor(seededRandom(nodeId * 23 + 5) * COLOR_VALUES.length)]
       
       thoughts.push({
         id: `n${nodeId}`,
-        title: `Thought ${nodeId}`,
+        title: `Note ${nodeId + 1}`,
         content: '',
         x: cluster.x + Math.cos(angle) * distance,
         y: cluster.y + Math.sin(angle) * distance,
         color,
-        tags: [GROUPS[clusterIndex % GROUPS.length]],
-        starred: seededRandom(nodeId * 37) > 0.9,
-        isDraft: seededRandom(nodeId * 41) > 0.95,
-        comments: [],
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        group: GROUPS[clusterIndex % GROUPS.length],
+        tags: [],
+        starred: seededRandom(nodeId * 37) > 0.92,
+        isDraft: false,
+        createdAt: new Date(Date.now() - Math.floor(seededRandom(nodeId * 41) * 7 * 24 * 60 * 60 * 1000)),
+        updatedAt: new Date(Date.now() - Math.floor(seededRandom(nodeId * 43) * 24 * 60 * 60 * 1000)),
       })
       
       nodeId++
     }
   })
   
-  // Add some scattered nodes
-  for (let i = 0; i < nodeCount - thoughts.length; i++) {
-    const angle = seededRandom(i * 53) * Math.PI * 2
-    const distance = 200 + seededRandom(i * 59) * 350
-    const colorKey = COLOR_KEYS[Math.floor(seededRandom(i * 61) * COLOR_KEYS.length)]
-    
-    thoughts.push({
-      id: `n${nodeId}`,
-      title: `Thought ${nodeId}`,
-      content: '',
-      x: centerX + Math.cos(angle) * distance,
-      y: centerY + Math.sin(angle) * distance,
-      color: NODE_COLORS[colorKey],
-      tags: [GROUPS[Math.floor(seededRandom(i * 67) * GROUPS.length)]],
-      starred: false,
-      isDraft: false,
-      comments: [],
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      group: GROUPS[Math.floor(seededRandom(i * 67) * GROUPS.length)],
-    })
-    
-    nodeId++
-  }
-  
-  // Generate edges - connect nodes within clusters more densely
+  // Generate edges - connect nodes within proximity
   let edgeId = 0
   thoughts.forEach((thought, i) => {
-    const connectionCount = Math.floor(seededRandom(i * 71) * 4) + 1
+    const connectionCount = Math.floor(seededRandom(i * 71 + 3) * 3) + 1
     
     for (let j = 0; j < connectionCount; j++) {
-      // Prefer connecting to nearby nodes
       const candidates = thoughts.filter((t, idx) => {
         if (idx === i) return false
         const dx = t.x - thought.x
         const dy = t.y - thought.y
         const dist = Math.sqrt(dx * dx + dy * dy)
-        return dist < 200 && seededRandom(i * 73 + j * 79 + idx) > 0.3
+        return dist < 150 && seededRandom(i * 73 + j * 79 + idx) > 0.5
       })
       
       if (candidates.length > 0) {
         const target = candidates[Math.floor(seededRandom(i * 83 + j) * candidates.length)]
         const types: RelationshipType[] = ['relates', 'supports', 'causes', 'contradicts']
         
-        // Avoid duplicate edges
         const exists = edges.some(
           e => (e.source === thought.id && e.target === target.id) ||
                (e.source === target.id && e.target === thought.id)
@@ -208,36 +159,38 @@ function generateDenseNetwork(): { thoughts: Thought[]; edges: Edge[] } {
     }
   })
   
-  // Add some long-range connections
-  for (let i = 0; i < 30; i++) {
-    const source = thoughts[Math.floor(seededRandom(i * 97) * thoughts.length)]
-    const target = thoughts[Math.floor(seededRandom(i * 101) * thoughts.length)]
-    
-    if (source.id !== target.id) {
-      const exists = edges.some(
-        e => (e.source === source.id && e.target === target.id) ||
-             (e.source === target.id && e.target === source.id)
-      )
-      
-      if (!exists) {
-        edges.push({
-          id: `e${edgeId++}`,
-          source: source.id,
-          target: target.id,
-          type: 'relates',
-        })
-      }
-    }
+  // Sample global commits
+  const sampleCommits = [
+    'Added connection between concepts',
+    'Refined understanding of core idea',
+    'Linked research notes',
+    'Updated hypothesis',
+    'Expanded on previous thought',
+    'Connected to existing framework',
+    'Clarified relationship',
+    'Added supporting evidence',
+  ]
+  
+  for (let i = 0; i < 8; i++) {
+    const linkedNode = thoughts[Math.floor(seededRandom(i * 97) * thoughts.length)]
+    globalCommits.push({
+      id: `gc${i}`,
+      content: sampleCommits[i],
+      nodeId: linkedNode?.id,
+      nodeTitle: linkedNode?.title,
+      timestamp: new Date(Date.now() - i * 3600000 - Math.floor(seededRandom(i * 101) * 3600000)),
+    })
   }
   
-  return { thoughts, edges }
+  return { thoughts, edges, globalCommits }
 }
 
-const { thoughts: initialThoughts, edges: initialEdges } = generateDenseNetwork()
+const { thoughts: initialThoughts, edges: initialEdges, globalCommits: initialCommits } = generateNetwork()
 
 export const useThoughtStore = create<ThoughtState>((set, get) => ({
   thoughts: initialThoughts,
   edges: initialEdges,
+  globalCommits: initialCommits,
   selectedThoughtId: null,
   isCreatingThought: false,
   focusedClusterId: null,
@@ -245,19 +198,27 @@ export const useThoughtStore = create<ThoughtState>((set, get) => ({
   addThought: (thoughtData) => {
     const id = `thought-${Date.now()}`
     const now = new Date()
-    const colorKeys = Object.values(NODE_COLORS)
     const newThought: Thought = {
       ...thoughtData,
       id,
-      comments: [],
       createdAt: now,
       updatedAt: now,
-      color: thoughtData.color || colorKeys[Math.floor(Math.random() * colorKeys.length)],
+      color: thoughtData.color || COLOR_VALUES[Math.floor(Math.random() * COLOR_VALUES.length)],
     }
     set((state) => ({
       thoughts: [...state.thoughts, newThought],
       selectedThoughtId: id,
       isCreatingThought: false,
+      globalCommits: [
+        {
+          id: `gc-${Date.now()}`,
+          content: `Created new note: ${newThought.title}`,
+          nodeId: id,
+          nodeTitle: newThought.title,
+          timestamp: now,
+        },
+        ...state.globalCommits,
+      ],
     }))
     return id
   },
@@ -271,10 +232,19 @@ export const useThoughtStore = create<ThoughtState>((set, get) => ({
   },
   
   deleteThought: (id) => {
+    const thought = get().thoughts.find(t => t.id === id)
     set((state) => ({
       thoughts: state.thoughts.filter((t) => t.id !== id),
       edges: state.edges.filter((e) => e.source !== id && e.target !== id),
       selectedThoughtId: state.selectedThoughtId === id ? null : state.selectedThoughtId,
+      globalCommits: thought ? [
+        {
+          id: `gc-${Date.now()}`,
+          content: `Deleted note: ${thought.title}`,
+          timestamp: new Date(),
+        },
+        ...state.globalCommits,
+      ] : state.globalCommits,
     }))
   },
   
@@ -284,8 +254,20 @@ export const useThoughtStore = create<ThoughtState>((set, get) => ({
   
   addEdge: (source, target, type) => {
     const id = `edge-${Date.now()}`
+    const sourceThought = get().thoughts.find(t => t.id === source)
+    const targetThought = get().thoughts.find(t => t.id === target)
     set((state) => ({
       edges: [...state.edges, { id, source, target, type }],
+      globalCommits: [
+        {
+          id: `gc-${Date.now()}`,
+          content: `Connected "${sourceThought?.title}" to "${targetThought?.title}"`,
+          nodeId: source,
+          nodeTitle: sourceThought?.title,
+          timestamp: new Date(),
+        },
+        ...state.globalCommits,
+      ],
     }))
   },
   
@@ -295,18 +277,19 @@ export const useThoughtStore = create<ThoughtState>((set, get) => ({
     }))
   },
   
-  addComment: (thoughtId, content) => {
-    const comment: Comment = {
-      id: `comment-${Date.now()}`,
-      content,
-      timestamp: new Date(),
-    }
+  addGlobalCommit: (content, nodeId) => {
+    const thought = nodeId ? get().thoughts.find(t => t.id === nodeId) : undefined
     set((state) => ({
-      thoughts: state.thoughts.map((t) =>
-        t.id === thoughtId
-          ? { ...t, comments: [...t.comments, comment], updatedAt: new Date() }
-          : t
-      ),
+      globalCommits: [
+        {
+          id: `gc-${Date.now()}`,
+          content,
+          nodeId,
+          nodeTitle: thought?.title,
+          timestamp: new Date(),
+        },
+        ...state.globalCommits,
+      ],
     }))
   },
   
