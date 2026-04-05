@@ -40,9 +40,9 @@ const THEME_COLORS: Record<string, string> = {
   slate: '#94a3b8',
 }
 
-// Edge colors - visible warm lines
-const EDGE_COLOR = 'rgba(245, 158, 11, 0.15)'
-const EDGE_HOVER_COLOR = 'rgba(245, 158, 11, 0.6)'
+// Edge colors - grey lines
+const EDGE_COLOR = 'rgba(255, 255, 255, 0.12)'
+const EDGE_HOVER_COLOR = 'rgba(255, 255, 255, 0.4)'
 const BG_COLOR = '#0c0c0e'
 
 function hexToRgba(hex: string, alpha: number): string {
@@ -339,14 +339,14 @@ export function GraphCanvas() {
         ctx.beginPath()
         ctx.moveTo(edge.source.x, edge.source.y)
         ctx.lineTo(edge.target.x, edge.target.y)
-        ctx.strokeStyle = isHighlighted ? EDGE_HOVER_COLOR : hasHighlight ? 'rgba(245, 158, 11, 0.05)' : EDGE_COLOR
+        ctx.strokeStyle = isHighlighted ? EDGE_HOVER_COLOR : hasHighlight ? 'rgba(255, 255, 255, 0.04)' : EDGE_COLOR
         ctx.lineWidth = isHighlighted ? 1 : 0.5
         ctx.stroke()
       })
       
       ctx.globalAlpha = 1
       
-      // Draw nodes - small stroked circles with glow
+      // Draw nodes - small circles, stroke by default, fill on hover
       nodes.forEach(node => {
         if (node.opacity < 0.05) return
         
@@ -354,37 +354,25 @@ export function GraphCanvas() {
         const isSelected = node.id === selectedId
         const isConnected = connectedToHovered.has(node.id) || connectedToSelected.has(node.id)
         const isDimmed = hasHighlight && !isConnected
+        const isActive = isHovered || isSelected
         
         const themeColor = THEME_COLORS[node.thought.color] || THEME_COLORS.slate
-        const radius = node.radius * (isHovered || isSelected ? 2.5 : 1.2)
+        const radius = node.radius * (isActive ? 2 : 1.2)
         
         ctx.globalAlpha = node.opacity
         
-        // Outer glow for all nodes
-        const glowRadius = radius * (isHovered || isSelected ? 10 : 5)
-        const glowAlpha = isDimmed ? 0.03 : (isHovered || isSelected ? 0.3 : 0.1)
-        const gradient = ctx.createRadialGradient(node.x, node.y, 0, node.x, node.y, glowRadius)
-        gradient.addColorStop(0, hexToRgba(themeColor, glowAlpha))
-        gradient.addColorStop(0.4, hexToRgba(themeColor, glowAlpha * 0.4))
-        gradient.addColorStop(1, 'rgba(0, 0, 0, 0)')
-        ctx.fillStyle = gradient
-        ctx.beginPath()
-        ctx.arc(node.x, node.y, glowRadius, 0, Math.PI * 2)
-        ctx.fill()
-        
-        // Node circle - stroke only, no fill
         ctx.beginPath()
         ctx.arc(node.x, node.y, radius, 0, Math.PI * 2)
-        ctx.strokeStyle = isDimmed ? hexToRgba(themeColor, 0.2) : hexToRgba(themeColor, 0.9)
-        ctx.lineWidth = isHovered || isSelected ? 1.5 : 1
-        ctx.stroke()
         
-        // Small center dot for active nodes
-        if (!isDimmed && (isHovered || isSelected)) {
-          ctx.beginPath()
-          ctx.arc(node.x, node.y, radius * 0.3, 0, Math.PI * 2)
-          ctx.fillStyle = hexToRgba(themeColor, 0.8)
+        if (isActive) {
+          // Fill on hover/select
+          ctx.fillStyle = hexToRgba(themeColor, 0.9)
           ctx.fill()
+        } else {
+          // Stroke only by default
+          ctx.strokeStyle = isDimmed ? hexToRgba(themeColor, 0.15) : hexToRgba(themeColor, 0.7)
+          ctx.lineWidth = 1
+          ctx.stroke()
         }
       })
       
