@@ -25,6 +25,14 @@ interface SimulationEdge {
 const EDGE_COLOR = 'rgba(180, 100, 80, 0.25)'
 const EDGE_COLOR_HOVER = 'rgba(180, 100, 80, 0.6)'
 
+// Helper to convert hex color to rgba
+function hexToRgba(hex: string, alpha: number): string {
+  const r = parseInt(hex.slice(1, 3), 16)
+  const g = parseInt(hex.slice(3, 5), 16)
+  const b = parseInt(hex.slice(5, 7), 16)
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`
+}
+
 export function ForceGraph() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
@@ -229,7 +237,7 @@ export function ForceGraph() {
           node.x, node.y, 0,
           node.x, node.y, radius * 4
         )
-        gradient.addColorStop(0, node.thought.color.replace(')', `, 0.4)`).replace('rgb', 'rgba').replace('#', ''))
+        gradient.addColorStop(0, hexToRgba(node.thought.color, 0.4))
         gradient.addColorStop(1, 'rgba(0, 0, 0, 0)')
         ctx.fillStyle = gradient
         ctx.beginPath()
