@@ -119,32 +119,42 @@ export function Sidebar() {
       </div>
       
       {/* Quick filters */}
-      <div className="px-2 py-2 border-b border-white/6">
-        <button
-          onClick={() => setFilter('all')}
-          className={`btn-tab ${filter === 'all' ? 'btn-tab-active' : ''}`}
-        >
-          <Folder className="w-4 h-4" />
-          <span>All</span>
-          <span className="ml-auto text-[11px] text-white/40 tabular-nums">{thoughts.length}</span>
-        </button>
-        <button
-          onClick={() => setFilter('starred')}
-          className={`btn-tab ${filter === 'starred' ? 'btn-tab-active' : ''}`}
-        >
-          <Star className="w-4 h-4" />
-          <span>Starred</span>
-          <span className="ml-auto text-[11px] text-white/40 tabular-nums">
-            {thoughts.filter(t => t.starred).length}
-          </span>
-        </button>
-        <button
-          onClick={() => setFilter('recent')}
-          className={`btn-tab ${filter === 'recent' ? 'btn-tab-active' : ''}`}
-        >
-          <Clock className="w-4 h-4" />
-          <span>Recent</span>
-        </button>
+      <div className="px-3 py-2 border-b border-white/6">
+        <div className="flex gap-1">
+          <button
+            onClick={() => setFilter('all')}
+            className={`flex-1 flex items-center justify-center gap-1.5 px-2 py-1.5 text-[12px] rounded-sm transition-all ${
+              filter === 'all' 
+                ? 'bg-white/10 text-white/90' 
+                : 'text-white/50 hover:text-white/70 hover:bg-white/5'
+            }`}
+          >
+            <Folder className="w-3.5 h-3.5" />
+            <span>All</span>
+          </button>
+          <button
+            onClick={() => setFilter('starred')}
+            className={`flex-1 flex items-center justify-center gap-1.5 px-2 py-1.5 text-[12px] rounded-sm transition-all ${
+              filter === 'starred' 
+                ? 'bg-white/10 text-white/90' 
+                : 'text-white/50 hover:text-white/70 hover:bg-white/5'
+            }`}
+          >
+            <Star className="w-3.5 h-3.5" />
+            <span>Starred</span>
+          </button>
+          <button
+            onClick={() => setFilter('recent')}
+            className={`flex-1 flex items-center justify-center gap-1.5 px-2 py-1.5 text-[12px] rounded-sm transition-all ${
+              filter === 'recent' 
+                ? 'bg-white/10 text-white/90' 
+                : 'text-white/50 hover:text-white/70 hover:bg-white/5'
+            }`}
+          >
+            <Clock className="w-3.5 h-3.5" />
+            <span>Recent</span>
+          </button>
+        </div>
       </div>
       
       {/* Create thought */}
@@ -202,8 +212,17 @@ export function Sidebar() {
         <div className="px-3 py-3 border-b border-white/6">
           <button
             onClick={() => startCreating()}
-            className="btn-primary w-full flex items-center justify-center gap-2 h-9"
+            className="relative w-full flex items-center justify-center gap-2 h-9 bg-amber-500/15 border border-amber-500/30 text-amber-400 text-sm hover:bg-amber-500/20 hover:border-amber-500/40 active:bg-amber-500/25 transition-all"
           >
+            {/* Corner accents */}
+            <span className="absolute -top-px -left-px w-2 h-px bg-amber-500/60" />
+            <span className="absolute -top-px -left-px w-px h-2 bg-amber-500/60" />
+            <span className="absolute -top-px -right-px w-2 h-px bg-amber-500/60" />
+            <span className="absolute -top-px -right-px w-px h-2 bg-amber-500/60" />
+            <span className="absolute -bottom-px -left-px w-2 h-px bg-amber-500/40" />
+            <span className="absolute -bottom-px -left-px w-px h-2 bg-amber-500/40" />
+            <span className="absolute -bottom-px -right-px w-2 h-px bg-amber-500/40" />
+            <span className="absolute -bottom-px -right-px w-px h-2 bg-amber-500/40" />
             <Plus className="w-4 h-4" />
             <span>New Thought</span>
           </button>
