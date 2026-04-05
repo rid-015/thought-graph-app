@@ -14,8 +14,8 @@ const geistMono = Geist_Mono({
 })
 
 export const metadata: Metadata = {
-  title: 'Cortex',
-  description: 'A minimal graph-based thinking tool.',
+  title: 'Nodus Graph',
+  description: 'A minimal graph-based thinking and note-taking tool.',
   generator: 'v0.app',
   icons: {
     icon: [

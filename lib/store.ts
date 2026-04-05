@@ -102,6 +102,325 @@ function generateSampleData() {
     { id: 'folder-misc', name: 'Miscellaneous', icon: 'box', color: 'slate', isExpanded: false },
   ]
   
+const thoughtContents: Record<string, string> = {
+    'Neural network intuitions': `# Neural Network Intuitions
+
+The fundamental insight behind neural networks is that complex patterns can emerge from simple computational units working together.
+
+## Core Concepts
+
+**Neurons as decision makers**: Each neuron takes weighted inputs, applies an activation function, and outputs a signal. Think of it as a tiny voter that says "yes" or "no" based on evidence.
+
+**Layers build abstraction**: Early layers detect simple patterns (edges, colors). Deeper layers combine these into complex features (faces, objects, concepts).
+
+**Learning is optimization**: Training a network means finding the right weights to minimize error. It's like tuning a million knobs simultaneously.
+
+## Key Intuitions
+
+1. **Universal approximation**: Given enough neurons, a network can approximate any continuous function
+2. **Representation learning**: The network discovers its own features rather than using hand-crafted ones
+3. **Distributed representations**: Information is spread across many neurons, making the system robust
+
+## Questions to Explore
+
+- Why do deeper networks often outperform wider ones?
+- How does the brain's architecture differ from artificial networks?
+- What makes certain architectures better for specific tasks?`,
+
+    'Transformer architecture': `# Transformer Architecture
+
+The transformer revolutionized NLP by replacing recurrence with self-attention, enabling massive parallelization and better long-range dependencies.
+
+## Architecture Overview
+
+**Encoder-Decoder structure**: The original transformer has both, but many models use just one (BERT = encoder, GPT = decoder).
+
+**Self-attention mechanism**: Each token attends to all other tokens, computing relevance scores. This creates a weighted combination of all positions.
+
+**Positional encoding**: Since transformers have no inherent notion of sequence order, we inject position information through sinusoidal functions or learned embeddings.
+
+## Why Transformers Work
+
+1. **Parallel processing**: Unlike RNNs, all positions are processed simultaneously
+2. **Direct connections**: Any two positions can interact in a single layer
+3. **Scalability**: Performance improves predictably with more data and compute
+
+## Implementation Notes
+
+- Multi-head attention allows the model to attend to different representation subspaces
+- Layer normalization is crucial for training stability
+- The feedforward network after attention adds non-linearity and capacity`,
+
+    'Attention mechanisms': `# Attention Mechanisms
+
+Attention allows models to focus on relevant parts of the input when producing each part of the output. It's fundamentally about learning what to look at.
+
+## The Attention Formula
+
+**Query, Key, Value**: The core abstraction. Queries ask questions, keys advertise content, values provide the actual information.
+
+\`\`\`
+Attention(Q, K, V) = softmax(QK^T / sqrt(d_k)) V
+\`\`\`
+
+The softmax creates a probability distribution over positions.
+
+## Types of Attention
+
+1. **Self-attention**: A sequence attends to itself (transformers)
+2. **Cross-attention**: One sequence attends to another (translation)
+3. **Multi-head attention**: Multiple attention patterns in parallel
+4. **Sparse attention**: Only attend to subset of positions (efficiency)
+
+## Intuitive Understanding
+
+Think of attention as a soft dictionary lookup. The query is what you're looking for, keys are labels on items, and values are the items themselves. The softmax decides how much to retrieve from each item.`,
+
+    'Gradient descent visualization': `# Gradient Descent Visualization
+
+Understanding gradient descent geometrically transforms it from abstract math to intuitive optimization.
+
+## The Landscape Metaphor
+
+Imagine the loss function as a mountainous terrain. Your position is determined by the model's parameters. Gradient descent is like rolling a ball downhill—it naturally seeks lower elevation (lower loss).
+
+## Key Visualizations
+
+**2D contour plots**: Show loss as elevation lines. Gradient vectors point perpendicular to contours, toward steeper descent.
+
+**3D surface plots**: Reveal valleys, ridges, and saddle points. Help understand why optimization can get stuck.
+
+**Learning rate effects**: 
+- Too small: slow progress, may get stuck
+- Too large: overshooting, divergence
+- Just right: efficient convergence
+
+## Advanced Concepts
+
+- **Momentum**: Add inertia to roll past local minima
+- **Adaptive rates**: Adam, RMSprop adjust per-parameter
+- **Loss landscape smoothness**: Affects trainability
+
+## Experiments to Try
+
+1. Visualize gradient flow through a simple network
+2. Compare SGD, momentum, and Adam trajectories
+3. Observe how batch size affects the landscape`,
+
+    'Consciousness theories': `# Consciousness Theories
+
+Exploring the hard problem: why is there subjective experience at all? Why doesn't the brain just process information "in the dark"?
+
+## Major Theories
+
+**Integrated Information Theory (IIT)**: Consciousness is identical to integrated information (Phi). A system is conscious to the degree it is both differentiated and integrated.
+
+**Global Workspace Theory**: Consciousness arises when information becomes globally available to multiple brain systems. The "spotlight" of attention.
+
+**Higher-Order Theories**: We're conscious of mental states when we have higher-order representations of them. Consciousness requires meta-cognition.
+
+**Predictive Processing**: Consciousness emerges from the brain's attempts to minimize prediction error about its own states.
+
+## The Hard Problem
+
+David Chalmers distinguishes:
+- **Easy problems**: Explaining cognitive functions (attention, memory, etc.)
+- **Hard problem**: Explaining why there is subjective experience
+
+No amount of functional explanation seems to bridge the "explanatory gap."
+
+## Open Questions
+
+- Could a sufficiently complex AI be conscious?
+- Is consciousness fundamental or emergent?
+- What's the relationship between consciousness and time?`,
+
+    'Color theory fundamentals': `# Color Theory Fundamentals
+
+Color is both physics (wavelengths of light) and psychology (perception and emotion). Great design requires understanding both.
+
+## The Basics
+
+**Primary systems**:
+- RGB (additive): Light-based, for screens
+- CMYK (subtractive): Ink-based, for print
+- RYB (traditional): Artistic mixing
+
+**Color properties**:
+- Hue: The color family (red, blue, etc.)
+- Saturation: Intensity/purity of the color
+- Value/Lightness: How light or dark
+
+## Color Relationships
+
+**Complementary**: Opposite on the wheel, maximum contrast
+**Analogous**: Adjacent colors, harmonious and natural
+**Triadic**: Three equidistant colors, vibrant but balanced
+**Split-complementary**: One color plus neighbors of its complement
+
+## Psychological Effects
+
+- **Warm colors** (red, orange, yellow): Energy, urgency, appetite
+- **Cool colors** (blue, green, purple): Calm, trust, creativity
+- **Neutrals**: Sophistication, balance, flexibility
+
+## Practical Application
+
+1. Start with 60-30-10 rule (dominant, secondary, accent)
+2. Ensure sufficient contrast for accessibility
+3. Consider color blindness (8% of men)
+4. Test in context, not isolation`,
+
+    'Deep work strategies': `# Deep Work Strategies
+
+Cal Newport's concept: professional activities performed in a state of distraction-free concentration that push cognitive capabilities to their limit.
+
+## The Deep Work Hypothesis
+
+The ability to perform deep work is becoming increasingly rare at exactly the same time it is becoming increasingly valuable in our economy.
+
+## Implementation Strategies
+
+**Monastic**: Eliminate all shallow obligations. Rare but powerful.
+**Bimodal**: Dedicate set periods (days/weeks) to deep work.
+**Rhythmic**: Build daily habits, same time each day.
+**Journalistic**: Fit deep work wherever you can. Requires practice.
+
+## Practical Tactics
+
+1. **Time blocking**: Schedule deep work sessions in advance
+2. **Shutdown ritual**: Clear ending to work day enables recovery
+3. **Productive meditation**: Think deeply during physical activity
+4. **Tool selection**: Be intentional about technology
+
+## Environment Design
+
+- Dedicated deep work location
+- Internet blocking tools
+- Visible "do not disturb" signals
+- All materials prepared in advance
+
+## Measuring Progress
+
+Track hours of deep work per week. Newport suggests 4 hours is realistic maximum for most people. Quality matters more than quantity.`,
+
+    'Chord progressions': `# Chord Progressions
+
+The harmonic movement that gives music its sense of journey and arrival. Understanding progressions unlocks composition.
+
+## Functional Harmony
+
+**Tonic (I)**: Home, stability, resolution
+**Subdominant (IV)**: Movement away, preparation  
+**Dominant (V)**: Tension, desire to resolve to tonic
+
+Most Western music is built on this tension-resolution cycle.
+
+## Common Progressions
+
+**I-IV-V-I**: The foundation (countless songs)
+**I-V-vi-IV**: The "pop progression" (Let It Be, No Woman No Cry)
+**ii-V-I**: Jazz foundation, smooth voice leading
+**I-vi-IV-V**: 50s progression (Stand By Me)
+**vi-IV-I-V**: Emotional pop (Someone Like You)
+
+## Voice Leading Principles
+
+1. Move each voice minimally
+2. Avoid parallel fifths and octaves
+3. Resolve tendency tones (7→1, 4→3)
+4. Keep common tones when possible
+
+## Extending Harmony
+
+- Add 7ths for color and sophistication
+- Use secondary dominants for temporary key changes
+- Explore modal interchange (borrowing from parallel modes)
+- Try chromatic mediants for surprise`,
+
+    'Typography scales': `# Typography Scales
+
+A systematic approach to sizing type that creates visual rhythm and hierarchy throughout a design.
+
+## The Mathematical Basis
+
+**Modular scales**: Based on ratios like:
+- Minor second: 1.067
+- Major second: 1.125
+- Minor third: 1.2
+- Major third: 1.25
+- Perfect fourth: 1.333
+- Perfect fifth: 1.5
+- Golden ratio: 1.618
+
+Each size is the previous multiplied by the ratio.
+
+## Practical Implementation
+
+\`\`\`
+Base: 16px
+Scale: 1.25 (major third)
+
+12.8px  (16 / 1.25)
+16px    (base)
+20px    (16 × 1.25)
+25px    (20 × 1.25)
+31.25px (25 × 1.25)
+39px    (31.25 × 1.25)
+\`\`\`
+
+## Usage Guidelines
+
+1. Limit to 6-8 sizes maximum
+2. Reserve largest sizes for key headings
+3. Body text: 16-20px for screens
+4. Maintain consistent scale across breakpoints
+5. Consider line-height ratios too
+
+## Tools
+
+- type-scale.com for generating scales
+- Fluid typography with clamp() for responsive sizing
+- Design systems should codify scales as tokens`,
+
+    'Show dont tell': `# Show, Don't Tell
+
+The foundational principle of vivid writing: render experience rather than report it. Let readers draw their own conclusions from concrete details.
+
+## The Difference
+
+**Telling**: "She was nervous."
+**Showing**: "She twisted her ring, glancing at the door every few seconds."
+
+**Telling**: "The house was old and creepy."
+**Showing**: "Paint curled from the shutters. The porch steps groaned under his weight. Something skittered in the walls."
+
+## When to Show
+
+- Emotional moments that deserve weight
+- Character traits you want readers to discover
+- Atmosphere and setting that matters to the story
+- Crucial plot points and revelations
+
+## When Telling is Better
+
+- Transitions and passages of time
+- Unimportant information that would slow pacing
+- Setup for more important showing
+- Sometimes direct statements have impact
+
+## Techniques for Showing
+
+1. **Concrete sensory details**: What can be seen, heard, touched
+2. **Character actions**: Behavior reveals psychology
+3. **Dialogue**: How people speak shows who they are
+4. **Specific nouns and active verbs**: "Oak" not "tree", "sprinted" not "moved quickly"
+
+## Practice Exercise
+
+Take a paragraph of telling and rewrite it as a scene. Add a character. Add conflict. Make it specific.`
+  }
+  
   const thoughtData: Record<string, { titles: string[], color: NodeColor }> = {
     'folder-ml': {
       color: 'orange',
@@ -189,11 +508,13 @@ function generateSampleData() {
       const createdOffset = Math.floor(random() * 60) * 24 * 60 * 60 * 1000
       const updatedOffset = Math.floor(random() * 14) * 24 * 60 * 60 * 1000
       
+      const richContent = thoughtContents[title] || `# ${title}\n\nExploring ${title.toLowerCase()}. This thought connects various concepts and ideas worth developing further.\n\n## Key Ideas\n\n- First insight about this topic\n- Connection to related concepts\n- Questions to explore further\n\n## Notes\n\nAdd your detailed notes here...`
+      
       thoughts.push({
         id,
         folderId,
         title,
-        content: `# ${title}\n\nExploring ${title.toLowerCase()}. This thought connects various concepts and ideas worth developing further.\n\n## Key Ideas\n\n- First insight about this topic\n- Connection to related concepts\n- Questions to explore further\n\n## Notes\n\nAdd your detailed notes here...`,
+        content: richContent,
         color,
         createdAt: new Date(baseDate - createdOffset),
         updatedAt: new Date(baseDate - updatedOffset),

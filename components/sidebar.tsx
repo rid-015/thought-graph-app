@@ -95,7 +95,7 @@ export function Sidebar() {
             <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-amber-500/20 to-orange-500/20 border border-amber-500/20 flex items-center justify-center">
               <Network className="w-3.5 h-3.5 text-amber-400" />
             </div>
-            <span className="font-semibold text-sm tracking-tight text-white/90">Cortex</span>
+            <span className="font-semibold text-sm tracking-tight text-white/90">Nodus</span>
           </div>
           <button
             onClick={() => { setViewMode('graph'); selectThought(null) }}
@@ -270,9 +270,9 @@ export function Sidebar() {
                         <button
                           key={`${folder.id}-${thought.id}-${idx}`}
                           onClick={() => selectThought(thought.id)}
-                          className={`w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-[13px] text-left transition-all ${
+                          className={`w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-[13px] text-left transition-all active:bg-white/8 ${
                             selectedId === thought.id 
-                              ? 'bg-amber-500/15 text-white/90 border-l-2 border-amber-500 -ml-[3px] pl-[11px]' 
+                              ? 'bg-white/10 text-white/90 border-l-2 border-white/40 -ml-[3px] pl-[11px]' 
                               : 'text-white/50 hover:text-white/70 hover:bg-white/5'
                           }`}
                         >
@@ -301,9 +301,9 @@ export function Sidebar() {
                 <button
                   key={`flat-${thought.id}-${idx}`}
                   onClick={() => selectThought(thought.id)}
-                  className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] text-left transition-all ${
+                  className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] text-left transition-all active:bg-white/8 ${
                     selectedId === thought.id 
-                      ? 'bg-amber-500/15 text-white/90' 
+                      ? 'bg-white/10 text-white/90' 
                       : 'text-white/60 hover:text-white/80 hover:bg-white/5'
                   }`}
                 >

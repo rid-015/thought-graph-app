@@ -84,7 +84,7 @@ export function CommitPanel() {
       {/* Activity Graph */}
       <div className="p-4 border-b border-white/6">
         <div className="flex items-center justify-between mb-3">
-          <span className="text-xs text-white/50">{totalActivity} contributions this year</span>
+          <span className="text-xs text-white/50">{totalActivity} entries this year</span>
         </div>
         
         {/* GitHub-style contribution grid */}
@@ -97,7 +97,7 @@ export function CommitPanel() {
                     key={dayIdx}
                     className="w-[10px] h-[10px] rounded-[2px] transition-colors hover:ring-1 hover:ring-white/20"
                     style={{ backgroundColor: getActivityColor(day.count) }}
-                    title={`${format(day.date, 'MMM d, yyyy')}: ${day.count} contribution${day.count !== 1 ? 's' : ''}`}
+                    title={`${format(day.date, 'MMM d, yyyy')}: ${day.count} entr${day.count !== 1 ? 'ies' : 'y'}`}
                   />
                 ))}
               </div>
