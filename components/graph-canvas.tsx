@@ -346,7 +346,7 @@ export function GraphCanvas() {
       
       ctx.globalAlpha = 1
       
-      // Draw nodes
+      // Draw nodes - refined square style
       nodes.forEach(node => {
         if (node.opacity < 0.05) return
         
@@ -356,33 +356,30 @@ export function GraphCanvas() {
         const isDimmed = hasHighlight && !isConnected
         
         const themeColor = THEME_COLORS[node.thought.color] || THEME_COLORS.slate
-        const radius = node.radius * (isHovered || isSelected ? 2 : 1)
+        const size = node.radius * (isHovered || isSelected ? 2.5 : 1.2)
         
         ctx.globalAlpha = node.opacity
         
         // Subtle glow for selected/hovered
         if (isHovered || isSelected) {
-          const gradient = ctx.createRadialGradient(node.x, node.y, 0, node.x, node.y, radius * 6)
-          gradient.addColorStop(0, hexToRgba(themeColor, 0.2))
+          const gradient = ctx.createRadialGradient(node.x, node.y, 0, node.x, node.y, size * 5)
+          gradient.addColorStop(0, hexToRgba(themeColor, 0.15))
           gradient.addColorStop(1, 'rgba(0, 0, 0, 0)')
           ctx.fillStyle = gradient
           ctx.beginPath()
-          ctx.arc(node.x, node.y, radius * 6, 0, Math.PI * 2)
+          ctx.arc(node.x, node.y, size * 5, 0, Math.PI * 2)
           ctx.fill()
         }
         
-        // Node dot
-        ctx.beginPath()
-        ctx.arc(node.x, node.y, radius, 0, Math.PI * 2)
-        ctx.fillStyle = isDimmed ? hexToRgba(themeColor, 0.15) : hexToRgba(themeColor, 0.8)
-        ctx.fill()
+        // Node - small square shape for refined look
+        const halfSize = size
+        ctx.fillStyle = isDimmed ? hexToRgba(themeColor, 0.12) : hexToRgba(themeColor, 0.7)
+        ctx.fillRect(node.x - halfSize, node.y - halfSize, halfSize * 2, halfSize * 2)
         
-        // Bright center for visibility
-        if (!isDimmed) {
-          ctx.beginPath()
-          ctx.arc(node.x, node.y, radius * 0.4, 0, Math.PI * 2)
-          ctx.fillStyle = `rgba(255, 255, 255, ${0.6 * node.opacity})`
-          ctx.fill()
+        // Inner highlight for active nodes
+        if (!isDimmed && (isHovered || isSelected || isConnected)) {
+          ctx.fillStyle = `rgba(255, 255, 255, ${0.4 * node.opacity})`
+          ctx.fillRect(node.x - halfSize * 0.4, node.y - halfSize * 0.4, halfSize * 0.8, halfSize * 0.8)
         }
       })
       
@@ -514,6 +511,26 @@ export function GraphCanvas() {
     hoverThought(null)
   }, [hoverThought])
   
+  const handleZoom = useCallback((direction: 'in' | 'out') => {
+    const container = containerRef.current
+    if (!container) return
+    
+    const { width, height } = container.getBoundingClientRect()
+    const centerX = width / 2
+    const centerY = height / 2
+    const t = transformRef.current
+    
+    const delta = direction === 'in' ? 1.2 : 0.8
+    const newScale = Math.max(0.3, Math.min(3, t.scale * delta))
+    const scaleChange = newScale / t.scale
+    
+    transformRef.current = {
+      x: centerX - (centerX - t.x) * scaleChange,
+      y: centerY - (centerY - t.y) * scaleChange,
+      scale: newScale,
+    }
+  }, [])
+  
   return (
     <div ref={containerRef} className="w-full h-full relative overflow-hidden">
       <canvas
@@ -571,10 +588,37 @@ export function GraphCanvas() {
         </div>
       )}
       
-      {/* Graph view indicator */}
-      <div className="absolute top-4 left-4 flex items-center gap-2 px-3 py-1.5 bg-[#0f0f11]/80 border border-white/8">
-        <div className="w-1.5 h-1.5 bg-amber-500/80" />
-        <span className="text-[11px] text-white/50">Graph View</span>
+      {/* Top bar with graph indicator and zoom controls */}
+      <div className="absolute top-4 left-4 right-4 flex items-center justify-between">
+        {/* Graph view indicator */}
+        <div className="flex items-center gap-2 px-3 py-1.5 bg-[#0f0f11]/80 border border-white/8">
+          <div className="w-1.5 h-1.5 bg-amber-500/80" />
+          <span className="text-[11px] text-white/50">Graph View</span>
+        </div>
+        
+        {/* Zoom controls */}
+        <div className="flex items-center gap-1 bg-[#0f0f11]/80 border border-white/8">
+          <button
+            onClick={() => handleZoom('out')}
+            className="w-8 h-8 flex items-center justify-center text-white/40 hover:text-white/70 hover:bg-white/5 transition-all duration-150 active:scale-90"
+            title="Zoom out"
+          >
+            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <line x1="5" y1="12" x2="19" y2="12" />
+            </svg>
+          </button>
+          <div className="w-px h-4 bg-white/10" />
+          <button
+            onClick={() => handleZoom('in')}
+            className="w-8 h-8 flex items-center justify-center text-white/40 hover:text-white/70 hover:bg-white/5 transition-all duration-150 active:scale-90"
+            title="Zoom in"
+          >
+            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <line x1="12" y1="5" x2="12" y2="19" />
+              <line x1="5" y1="12" x2="19" y2="12" />
+            </svg>
+          </button>
+        </div>
       </div>
       
       {/* Controls hint */}
