@@ -76,17 +76,17 @@ export function CommitPanel() {
       {/* Header */}
       <div className="p-4 border-b border-white/6">
         <div className="flex items-center gap-2">
-          <div className="relative">
-            <GitCommit className="w-4 h-4 text-amber-400" />
+          <div className="w-6 h-6 rounded-md bg-amber-500/15 flex items-center justify-center">
+            <GitCommit className="w-3.5 h-3.5 text-amber-400" />
           </div>
-          <span className="text-[11px] font-mono tracking-widest uppercase text-white/60">Activity</span>
+          <span className="text-sm font-medium text-white/80">Activity</span>
         </div>
       </div>
       
       {/* Activity Graph */}
       <div className="p-4 border-b border-white/6">
         <div className="flex items-center justify-between mb-3">
-          <span className="text-[10px] font-mono text-white/40 tracking-wide uppercase">{totalActivity} entries / year</span>
+          <span className="text-[11px] text-white/40">{totalActivity} entries this year</span>
         </div>
         
         {/* GitHub-style contribution grid */}
@@ -109,7 +109,7 @@ export function CommitPanel() {
         
         {/* Legend */}
         <div className="flex items-center justify-end gap-1 mt-3">
-          <span className="text-[9px] font-mono text-white/30 mr-1 uppercase">Less</span>
+          <span className="text-[9px] text-white/30 mr-1">Less</span>
           {ACTIVITY_COLORS.map((color, i) => (
             <div
               key={i}
@@ -117,7 +117,7 @@ export function CommitPanel() {
               style={{ backgroundColor: color }}
             />
           ))}
-          <span className="text-[9px] font-mono text-white/30 ml-1 uppercase">More</span>
+          <span className="text-[9px] text-white/30 ml-1">More</span>
         </div>
       </div>
       
@@ -126,17 +126,20 @@ export function CommitPanel() {
         <div className="flex gap-2" suppressHydrationWarning>
           <input
             type="text"
-            placeholder="log.insight..."
+            placeholder="Add an insight..."
             value={newCommit}
             onChange={e => setNewCommit(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && handleAddCommit()}
-            className="input-tech flex-1 font-mono text-xs"
+            className="flex-1 h-9 px-3 text-sm bg-white/5 border border-white/8 rounded-md placeholder:text-white/30 text-white/80 focus:outline-none focus:border-amber-500/40"
           />
           <button
             onClick={handleAddCommit}
             disabled={!newCommit.trim()}
-            className="btn-icon-tech h-9 w-9 flex items-center justify-center bg-amber-500/10 text-amber-400 hover:bg-amber-500/15 disabled:opacity-30 disabled:cursor-not-allowed"
+            className="relative h-9 w-9 flex items-center justify-center bg-amber-500/15 border border-amber-500/30 text-amber-400 hover:bg-amber-500/20 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
           >
+            {/* Corner accents */}
+            <span className="absolute -top-px -left-px w-1.5 h-px bg-amber-500/70" />
+            <span className="absolute -top-px -left-px w-px h-1.5 bg-amber-500/70" />
             <Plus className="w-4 h-4" />
           </button>
         </div>
@@ -152,7 +155,7 @@ export function CommitPanel() {
             return (
               <div
                 key={commit.id}
-                className="group relative flex gap-3 py-2.5 px-2 hover:bg-white/3 transition-colors"
+                className="group relative flex gap-3 py-2.5 px-2 rounded-md hover:bg-white/3 transition-colors"
               >
                 {/* Timeline line */}
                 {idx < commits.length - 1 && (
@@ -160,7 +163,7 @@ export function CommitPanel() {
                 )}
                 
                 {/* Icon */}
-                <div className={`relative z-10 w-5 h-5 flex items-center justify-center flex-shrink-0 ${
+                <div className={`relative z-10 w-5 h-5 rounded flex items-center justify-center flex-shrink-0 ${
                   commit.type === 'create' ? 'bg-emerald-500/15 text-emerald-400' :
                   commit.type === 'connect' ? 'bg-blue-500/15 text-blue-400' :
                   commit.type === 'insight' ? 'bg-amber-500/15 text-amber-400' :
@@ -175,16 +178,16 @@ export function CommitPanel() {
                     {commit.message}
                   </p>
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-[9px] font-mono text-white/30 tracking-wide">
+                    <span className="text-[10px] text-white/30">
                       {formatDistanceToNow(commit.timestamp, { addSuffix: true })}
                     </span>
                     {thought && (
                       <button
                         onClick={() => selectThought(thought.id)}
-                        className="flex items-center gap-1.5 text-[9px] font-mono text-white/40 hover:text-white/60 transition-colors tracking-wide"
+                        className="flex items-center gap-1.5 text-[10px] text-white/40 hover:text-white/60 transition-colors"
                       >
                         <span
-                          className="w-1.5 h-1.5"
+                          className="w-1.5 h-1.5 rounded-full"
                           style={{ backgroundColor: NODE_COLORS[thought.color] }}
                         />
                         <span className="truncate max-w-20">{thought.title}</span>
@@ -201,25 +204,22 @@ export function CommitPanel() {
       {/* Stats footer */}
       <div className="p-4 border-t border-white/6">
         <div className="grid grid-cols-3 gap-2 text-center">
-          <div className="relative bg-white/3 py-2.5">
-            <div className="absolute -top-px -left-px w-1.5 h-px bg-white/20" />
-            <div className="absolute -top-px -left-px w-px h-1.5 bg-white/20" />
-            <div className="text-sm font-mono text-white/90">{thoughts.length}</div>
-            <div className="text-[9px] font-mono text-white/40 uppercase tracking-wider">Thoughts</div>
+          <div className="relative bg-white/3 rounded-md py-2.5">
+            <div className="text-sm font-medium text-white/90">{thoughts.length}</div>
+            <div className="text-[9px] text-white/40">Thoughts</div>
           </div>
-          <div className="relative bg-white/3 py-2.5">
-            <div className="absolute -top-px -left-px w-1.5 h-px bg-white/20" />
-            <div className="absolute -top-px -left-px w-px h-1.5 bg-white/20" />
-            <div className="text-sm font-mono text-white/90">{commits.length}</div>
-            <div className="text-[9px] font-mono text-white/40 uppercase tracking-wider">Commits</div>
+          <div className="relative bg-white/3 rounded-md py-2.5">
+            <div className="text-sm font-medium text-white/90">{commits.length}</div>
+            <div className="text-[9px] text-white/40">Commits</div>
           </div>
-          <div className="relative bg-amber-500/10 py-2.5">
-            <div className="absolute -top-px -left-px w-1.5 h-px bg-amber-500/50" />
-            <div className="absolute -top-px -left-px w-px h-1.5 bg-amber-500/50" />
-            <div className="text-sm font-mono text-amber-400">
+          <div className="relative bg-amber-500/10 rounded-md py-2.5">
+            {/* Corner accents */}
+            <span className="absolute -top-px -left-px w-1.5 h-px bg-amber-500/50" />
+            <span className="absolute -top-px -left-px w-px h-1.5 bg-amber-500/50" />
+            <div className="text-sm font-medium text-amber-400">
               {thoughts.filter(t => t.starred).length}
             </div>
-            <div className="text-[9px] font-mono text-white/40 uppercase tracking-wider">Starred</div>
+            <div className="text-[9px] text-white/40">Starred</div>
           </div>
         </div>
       </div>

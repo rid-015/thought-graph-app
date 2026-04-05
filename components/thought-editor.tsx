@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { useStore, NODE_COLORS, type NodeColor } from '@/lib/store'
+import { useStore, NODE_COLORS } from '@/lib/store'
 import { 
   ArrowLeft,
   Star,
@@ -95,11 +95,13 @@ export function ThoughtEditor() {
     return (
       <div className="flex-1 flex items-center justify-center">
         <div className="text-center">
-          <p className="text-white/40 text-[11px] font-mono tracking-wide uppercase">No thought selected</p>
+          <p className="text-white/40 text-sm">No thought selected</p>
           <button
             onClick={() => setViewMode('graph')}
-            className="btn-tech mt-4"
+            className="relative mt-4 px-4 py-2 text-sm bg-white/5 border border-white/10 text-white/70 hover:bg-white/8 transition-all"
           >
+            <span className="absolute -top-px -left-px w-2 h-px bg-white/30" />
+            <span className="absolute -top-px -left-px w-px h-2 bg-white/30" />
             Back to Graph
           </button>
         </div>
@@ -114,23 +116,23 @@ export function ThoughtEditor() {
         <div className="flex items-center gap-4">
           <button
             onClick={handleBack}
-            className="btn-icon-tech -ml-2"
+            className="p-2 text-white/40 hover:text-white/70 hover:bg-white/5 rounded-md transition-all"
           >
             <ArrowLeft className="w-4 h-4" />
           </button>
           
-          <div className="flex items-center gap-2 text-[10px] font-mono text-white/40 tracking-wide uppercase">
+          <div className="flex items-center gap-2 text-sm text-white/50">
             {folder && (
               <>
                 <span
-                  className="w-1.5 h-1.5"
+                  className="w-2 h-2 rounded-full"
                   style={{ backgroundColor: NODE_COLORS[folder.color] }}
                 />
                 <span>{folder.name}</span>
                 <span className="text-white/20">/</span>
               </>
             )}
-            <span className="text-white/60 truncate max-w-48">{thought.title}</span>
+            <span className="text-white/70 truncate max-w-48">{thought.title}</span>
           </div>
         </div>
         
@@ -138,19 +140,21 @@ export function ThoughtEditor() {
           {hasChanges && (
             <button
               onClick={handleSave}
-              className="btn-tech-primary flex items-center gap-1.5 px-3 py-1.5 h-auto"
+              className="relative flex items-center gap-1.5 px-3 py-1.5 text-sm bg-amber-500/15 border border-amber-500/30 text-amber-400 hover:bg-amber-500/20 transition-all"
             >
-              <Save className="w-3 h-3" />
+              <span className="absolute -top-px -left-px w-1.5 h-px bg-amber-500/70" />
+              <span className="absolute -top-px -left-px w-px h-1.5 bg-amber-500/70" />
+              <Save className="w-3.5 h-3.5" />
               Save
             </button>
           )}
           
           <button
             onClick={() => toggleStar(thought.id)}
-            className={`btn-icon-tech ${
+            className={`p-2 rounded-md transition-all ${
               thought.starred 
                 ? 'text-amber-400 bg-amber-400/10' 
-                : ''
+                : 'text-white/40 hover:text-white/70 hover:bg-white/5'
             }`}
           >
             <Star className={`w-4 h-4 ${thought.starred ? 'fill-current' : ''}`} />
@@ -158,7 +162,7 @@ export function ThoughtEditor() {
           
           <button
             onClick={handleDelete}
-            className="btn-icon-tech hover:text-red-400 hover:bg-red-400/10"
+            className="p-2 rounded-md text-white/40 hover:text-red-400 hover:bg-red-400/10 transition-all"
           >
             <Trash2 className="w-4 h-4" />
           </button>
@@ -178,7 +182,7 @@ export function ThoughtEditor() {
           />
           
           {/* Meta */}
-          <div className="flex items-center gap-4 text-[10px] font-mono text-white/30 mb-8 tracking-wide">
+          <div className="flex items-center gap-4 text-[11px] text-white/30 mb-8">
             <div className="flex items-center gap-1.5">
               <Calendar className="w-3 h-3" />
               <span>{format(thought.createdAt, 'MMM d, yyyy')}</span>
@@ -200,7 +204,7 @@ export function ThoughtEditor() {
             value={content}
             onChange={e => handleContentChange(e.target.value)}
             placeholder="Start writing..."
-            className="w-full min-h-[400px] text-[14px] leading-relaxed text-white/70 bg-transparent border-none outline-none resize-none placeholder:text-white/20 font-mono"
+            className="w-full min-h-[400px] text-[15px] leading-relaxed text-white/70 bg-transparent border-none outline-none resize-none placeholder:text-white/20"
           />
           
           {/* Linked thoughts */}
@@ -208,8 +212,8 @@ export function ThoughtEditor() {
             <div className="mt-12 pt-8 border-t border-white/8">
               <div className="flex items-center gap-2 mb-4">
                 <Link2 className="w-3.5 h-3.5 text-white/30" />
-                <h3 className="text-[10px] font-mono text-white/50 tracking-widest uppercase">
-                  Linked ({linkedThoughts.length})
+                <h3 className="text-sm text-white/50">
+                  Linked thoughts ({linkedThoughts.length})
                 </h3>
               </div>
               
@@ -218,19 +222,15 @@ export function ThoughtEditor() {
                   <button
                     key={`linked-${linked.id}-${idx}`}
                     onClick={() => selectThought(linked.id)}
-                    className="relative flex items-center gap-3 p-3 text-left bg-white/3 hover:bg-white/5 border border-white/5 hover:border-white/10 transition-colors group"
+                    className="relative flex items-center gap-3 p-3 text-left bg-white/3 hover:bg-white/5 border border-white/5 hover:border-white/10 rounded-md transition-colors group"
                   >
-                    {/* Corner accents */}
-                    <div className="absolute -top-px -left-px w-2 h-px bg-white/20 group-hover:bg-amber-500/50 transition-colors" />
-                    <div className="absolute -top-px -left-px w-px h-2 bg-white/20 group-hover:bg-amber-500/50 transition-colors" />
-                    
                     <span
-                      className="w-1.5 h-1.5 flex-shrink-0"
+                      className="w-2 h-2 rounded-full flex-shrink-0"
                       style={{ backgroundColor: NODE_COLORS[linked.color] }}
                     />
                     <div className="flex-1 min-w-0">
-                      <div className="text-[12px] text-white/70 truncate">{linked.title}</div>
-                      <div className="text-[10px] font-mono text-white/30 truncate tracking-wide uppercase">
+                      <div className="text-sm text-white/70 truncate">{linked.title}</div>
+                      <div className="text-[11px] text-white/30 truncate">
                         {folders.find(f => f.id === linked.folderId)?.name}
                       </div>
                     </div>
