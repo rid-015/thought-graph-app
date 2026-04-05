@@ -572,8 +572,8 @@ export function GraphCanvas() {
       )}
       
       {/* Graph view indicator */}
-      <div className="absolute top-4 left-4 flex items-center gap-2 px-3 py-1.5 bg-[#0f0f11]/80 border border-white/6 rounded-sm">
-        <div className="w-1.5 h-1.5 rounded-full bg-amber-500/80" />
+      <div className="absolute top-4 left-4 flex items-center gap-2 px-3 py-1.5 bg-[#0f0f11]/80 border border-white/8">
+        <div className="w-1.5 h-1.5 bg-amber-500/80" />
         <span className="text-[11px] text-white/50">Graph View</span>
       </div>
       
