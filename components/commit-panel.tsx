@@ -130,7 +130,7 @@ export function CommitPanel() {
             value={newCommit}
             onChange={e => setNewCommit(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && handleAddCommit()}
-            className="input flex-1"
+            className="flex-1 h-9 px-3 text-[13px] bg-white/5 border border-white/8 text-white/80 placeholder:text-white/30 placeholder:text-[12px] focus:outline-none focus:border-white/15 transition-all duration-150"
           />
           <button
             onClick={handleAddCommit}

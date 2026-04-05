@@ -105,13 +105,13 @@ export function Sidebar() {
       {/* Search */}
       <div className="px-3 pb-3">
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/25" />
           <input
             type="text"
             placeholder="Search thoughts..."
             value={search}
             onChange={e => setSearch(e.target.value)}
-            className="w-full h-9 pl-9 pr-3 text-sm bg-white/5 border border-white/8 text-white/80 placeholder:text-white/30 focus:outline-none focus:border-white/15 focus:bg-white/8 transition-all duration-150"
+            className="w-full h-9 pl-9 pr-3 text-[13px] bg-white/5 text-white/80 placeholder:text-white/30 placeholder:text-[12px] focus:outline-none focus:bg-white/8 transition-all duration-150"
           />
         </div>
       </div>
