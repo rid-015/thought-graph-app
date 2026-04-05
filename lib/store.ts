@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 
-// Seeded random number generator for consistent SSR/client hydration
+// Seeded random for consistent SSR/client hydration
 function createSeededRandom(seed: number) {
   return () => {
     seed = (seed * 1103515245 + 12345) & 0x7fffffff
@@ -8,13 +8,15 @@ function createSeededRandom(seed: number) {
   }
 }
 
-// Muted node colors - grayscale with subtle variation
+// Warm, techy node colors
 export const NODE_COLORS = {
-  gray: '#9ca3af',
-  slate: '#94a3b8',
-  zinc: '#a1a1aa',
-  neutral: '#a3a3a3',
-  stone: '#a8a29e',
+  amber: '#f59e0b',
+  orange: '#f97316',
+  rose: '#f43f5e',
+  violet: '#8b5cf6',
+  blue: '#3b82f6',
+  emerald: '#10b981',
+  slate: '#64748b',
 } as const
 
 export type NodeColor = keyof typeof NODE_COLORS
@@ -23,6 +25,7 @@ export interface Folder {
   id: string
   name: string
   icon: string
+  color: NodeColor
   isExpanded: boolean
 }
 
@@ -53,11 +56,12 @@ export interface Commit {
   type: 'create' | 'update' | 'connect' | 'insight'
 }
 
-// Activity data for contribution graph (52 weeks x 7 days)
 export interface ActivityDay {
   date: Date
   count: number
 }
+
+type ViewMode = 'graph' | 'editor'
 
 interface Store {
   folders: Folder[]
@@ -68,12 +72,16 @@ interface Store {
   selectedThoughtId: string | null
   hoveredThoughtId: string | null
   selectedFolderId: string | null
+  viewMode: ViewMode
+  isCreating: boolean
   
   selectThought: (id: string | null) => void
   hoverThought: (id: string | null) => void
   selectFolder: (id: string | null) => void
   toggleFolder: (id: string) => void
-  addThought: (thought: Omit<Thought, 'id' | 'createdAt' | 'updatedAt'>) => void
+  setViewMode: (mode: ViewMode) => void
+  setIsCreating: (creating: boolean) => void
+  addThought: (thought: Omit<Thought, 'id' | 'createdAt' | 'updatedAt'>) => string
   updateThought: (id: string, updates: Partial<Thought>) => void
   deleteThought: (id: string) => void
   addConnection: (source: string, target: string, type: Connection['type']) => void
@@ -83,66 +91,78 @@ interface Store {
 
 function generateSampleData() {
   const random = createSeededRandom(42)
-  const colorKeys = Object.keys(NODE_COLORS) as NodeColor[]
   
   const folders: Folder[] = [
-    { id: 'folder-ml', name: 'Machine Learning', icon: 'brain', isExpanded: true },
-    { id: 'folder-philosophy', name: 'Philosophy', icon: 'scroll', isExpanded: false },
-    { id: 'folder-design', name: 'Design Systems', icon: 'palette', isExpanded: false },
-    { id: 'folder-productivity', name: 'Productivity', icon: 'zap', isExpanded: false },
-    { id: 'folder-writing', name: 'Writing', icon: 'pen', isExpanded: false },
-    { id: 'folder-music', name: 'Music Theory', icon: 'music', isExpanded: false },
-    { id: 'folder-misc', name: 'Miscellaneous', icon: 'box', isExpanded: false },
+    { id: 'folder-ml', name: 'Machine Learning', icon: 'brain', color: 'orange', isExpanded: true },
+    { id: 'folder-philosophy', name: 'Philosophy', icon: 'scroll', color: 'violet', isExpanded: false },
+    { id: 'folder-design', name: 'Design Systems', icon: 'palette', color: 'rose', isExpanded: false },
+    { id: 'folder-productivity', name: 'Productivity', icon: 'zap', color: 'amber', isExpanded: false },
+    { id: 'folder-writing', name: 'Writing', icon: 'pen', color: 'blue', isExpanded: false },
+    { id: 'folder-music', name: 'Music Theory', icon: 'music', color: 'emerald', isExpanded: false },
+    { id: 'folder-misc', name: 'Miscellaneous', icon: 'box', color: 'slate', isExpanded: false },
   ]
   
-  const thoughtData: Record<string, string[]> = {
-    'folder-ml': [
-      'Neural network intuitions', 'Transformer architecture', 'Attention mechanisms',
-      'Gradient descent visualization', 'Loss functions', 'Backpropagation',
-      'Embeddings and vector spaces', 'Feature engineering', 'Model compression',
-      'Transfer learning patterns', 'Few-shot learning', 'Reinforcement learning basics',
-      'GANs and generative models', 'Diffusion models', 'LLM prompting strategies',
-      'Fine-tuning approaches', 'RAG architectures', 'Agent systems'
-    ],
-    'folder-philosophy': [
-      'Consciousness theories', 'Free will paradox', 'Ethics of AI',
-      'Epistemology notes', 'Phenomenology intro', 'Mind-body problem',
-      'Determinism vs chaos', 'Emergence patterns', 'Systems thinking',
-      'Complexity and simplicity', 'Reductionism limits', 'Holistic approaches',
-      'Eastern philosophy', 'Stoic principles'
-    ],
-    'folder-design': [
-      'Color theory fundamentals', 'Typography scales', 'Spacing systems',
-      'Component architecture', 'Design tokens', 'Accessibility patterns',
-      'Motion design principles', 'Dark mode strategies', 'Responsive patterns',
-      'Icon design rules', 'Grid systems', 'Visual hierarchy',
-      'Brand consistency', 'Design documentation', 'Figma workflows', 'CSS architecture'
-    ],
-    'folder-productivity': [
-      'Deep work strategies', 'Time blocking', 'Energy management',
-      'Note-taking systems', 'Spaced repetition', 'Second brain concepts',
-      'GTD methodology', 'Pomodoro variations', 'Focus environments',
-      'Digital minimalism', 'Attention economy', 'Flow states'
-    ],
-    'folder-writing': [
-      'Show dont tell', 'Voice and tone', 'Narrative structures',
-      'Editing techniques', 'Research methods', 'Outline strategies',
-      'Writing rituals', 'Feedback loops', 'Publishing workflows',
-      'Technical writing', 'Storytelling patterns', 'Audience analysis',
-      'Content strategy', 'SEO for writers', 'Newsletter growth'
-    ],
-    'folder-music': [
-      'Chord progressions', 'Modal interchange', 'Voice leading',
-      'Rhythm patterns', 'Harmonic analysis', 'Melodic contour',
-      'Song structure', 'Production techniques', 'Sound design basics', 'Mixing fundamentals'
-    ],
-    'folder-misc': [
-      'Coffee brewing methods', 'Book recommendations', 'Travel notes',
-      'Recipe ideas', 'Fitness tracking', 'Language learning',
-      'Meditation practice', 'Sleep optimization', 'Reading strategies',
-      'Journaling prompts', 'Gift ideas', 'Home organization',
-      'Plant care', 'Photography tips', 'Podcast notes'
-    ]
+  const thoughtData: Record<string, { titles: string[], color: NodeColor }> = {
+    'folder-ml': {
+      color: 'orange',
+      titles: [
+        'Neural network intuitions', 'Transformer architecture', 'Attention mechanisms',
+        'Gradient descent visualization', 'Loss functions', 'Backpropagation',
+        'Embeddings and vector spaces', 'Feature engineering', 'Model compression',
+        'Transfer learning patterns', 'Few-shot learning', 'Reinforcement learning basics',
+        'GANs and generative models', 'Diffusion models', 'LLM prompting strategies',
+      ]
+    },
+    'folder-philosophy': {
+      color: 'violet',
+      titles: [
+        'Consciousness theories', 'Free will paradox', 'Ethics of AI',
+        'Epistemology notes', 'Phenomenology intro', 'Mind-body problem',
+        'Determinism vs chaos', 'Emergence patterns', 'Systems thinking',
+        'Complexity and simplicity', 'Reductionism limits', 'Holistic approaches',
+      ]
+    },
+    'folder-design': {
+      color: 'rose',
+      titles: [
+        'Color theory fundamentals', 'Typography scales', 'Spacing systems',
+        'Component architecture', 'Design tokens', 'Accessibility patterns',
+        'Motion design principles', 'Dark mode strategies', 'Responsive patterns',
+        'Icon design rules', 'Grid systems', 'Visual hierarchy',
+      ]
+    },
+    'folder-productivity': {
+      color: 'amber',
+      titles: [
+        'Deep work strategies', 'Time blocking', 'Energy management',
+        'Note-taking systems', 'Spaced repetition', 'Second brain concepts',
+        'GTD methodology', 'Pomodoro variations', 'Focus environments',
+      ]
+    },
+    'folder-writing': {
+      color: 'blue',
+      titles: [
+        'Show dont tell', 'Voice and tone', 'Narrative structures',
+        'Editing techniques', 'Research methods', 'Outline strategies',
+        'Writing rituals', 'Feedback loops', 'Publishing workflows',
+      ]
+    },
+    'folder-music': {
+      color: 'emerald',
+      titles: [
+        'Chord progressions', 'Modal interchange', 'Voice leading',
+        'Rhythm patterns', 'Harmonic analysis', 'Melodic contour',
+        'Song structure', 'Production techniques',
+      ]
+    },
+    'folder-misc': {
+      color: 'slate',
+      titles: [
+        'Coffee brewing methods', 'Book recommendations', 'Travel notes',
+        'Recipe ideas', 'Fitness tracking', 'Language learning',
+        'Meditation practice', 'Sleep optimization',
+      ]
+    }
   }
   
   const thoughts: Thought[] = []
@@ -154,14 +174,18 @@ function generateSampleData() {
   const baseDate = new Date('2026-04-01T12:00:00Z').getTime()
   
   // Create thoughts
-  Object.entries(thoughtData).forEach(([folderId, titles]) => {
+  Object.entries(thoughtData).forEach(([folderId, data]) => {
     thoughtsByFolder[folderId] = []
     
-    titles.forEach((title) => {
+    data.titles.forEach((title) => {
       const id = `thought-${thoughtIndex++}`
       thoughtsByFolder[folderId].push(id)
       
-      const color = colorKeys[Math.floor(random() * colorKeys.length)]
+      // Use folder color with occasional variation
+      const useMainColor = random() > 0.2
+      const colorKeys = Object.keys(NODE_COLORS) as NodeColor[]
+      const color = useMainColor ? data.color : colorKeys[Math.floor(random() * colorKeys.length)]
+      
       const createdOffset = Math.floor(random() * 60) * 24 * 60 * 60 * 1000
       const updatedOffset = Math.floor(random() * 14) * 24 * 60 * 60 * 1000
       
@@ -169,7 +193,7 @@ function generateSampleData() {
         id,
         folderId,
         title,
-        content: `Exploring ${title.toLowerCase()}. This thought connects various concepts and ideas worth developing further.`,
+        content: `# ${title}\n\nExploring ${title.toLowerCase()}. This thought connects various concepts and ideas worth developing further.\n\n## Key Ideas\n\n- First insight about this topic\n- Connection to related concepts\n- Questions to explore further\n\n## Notes\n\nAdd your detailed notes here...`,
         color,
         createdAt: new Date(baseDate - createdOffset),
         updatedAt: new Date(baseDate - updatedOffset),
@@ -207,7 +231,7 @@ function generateSampleData() {
     
     // Cross-folder connections
     const otherFolders = folderIds.filter(f => f !== folderId)
-    const numCross = Math.floor(folderThoughts.length * 0.2)
+    const numCross = Math.floor(folderThoughts.length * 0.25)
     
     for (let i = 0; i < numCross; i++) {
       const sourceIdx = Math.floor(random() * folderThoughts.length)
@@ -251,7 +275,7 @@ function generateSampleData() {
     })
   })
   
-  // Generate activity data (last 52 weeks)
+  // Generate activity data
   const activity: ActivityDay[] = []
   const activityRandom = createSeededRandom(99)
   const today = new Date('2026-04-05')
@@ -289,13 +313,17 @@ export const useStore = create<Store>((set, get) => ({
   selectedThoughtId: null,
   hoveredThoughtId: null,
   selectedFolderId: null,
+  viewMode: 'graph',
+  isCreating: false,
   
-  selectThought: (id) => set({ selectedThoughtId: id }),
+  selectThought: (id) => set({ selectedThoughtId: id, viewMode: id ? 'editor' : 'graph' }),
   hoverThought: (id) => set({ hoveredThoughtId: id }),
   selectFolder: (id) => set({ selectedFolderId: id }),
   toggleFolder: (id) => set(state => ({
     folders: state.folders.map(f => f.id === id ? { ...f, isExpanded: !f.isExpanded } : f)
   })),
+  setViewMode: (mode) => set({ viewMode: mode }),
+  setIsCreating: (creating) => set({ isCreating: creating }),
   
   addThought: (thought) => {
     const id = `thought-${Date.now()}`
@@ -305,8 +333,12 @@ export const useStore = create<Store>((set, get) => ({
       activity: state.activity.map((a, i) => 
         i === state.activity.length - 1 ? { ...a, count: a.count + 1 } : a
       ),
+      selectedThoughtId: id,
+      viewMode: 'editor',
+      isCreating: false,
     }))
     get().addCommit(`Created "${thought.title}"`, id, 'create')
+    return id
   },
   
   updateThought: (id, updates) => {
@@ -315,16 +347,17 @@ export const useStore = create<Store>((set, get) => ({
         t.id === id ? { ...t, ...updates, updatedAt: new Date() } : t
       ),
     }))
-    const thought = get().thoughts.find(t => t.id === id)
-    if (thought) get().addCommit(`Updated "${thought.title}"`, id, 'update')
   },
   
   deleteThought: (id) => {
+    const thought = get().thoughts.find(t => t.id === id)
     set(state => ({
       thoughts: state.thoughts.filter(t => t.id !== id),
       connections: state.connections.filter(c => c.source !== id && c.target !== id),
       selectedThoughtId: state.selectedThoughtId === id ? null : state.selectedThoughtId,
+      viewMode: state.selectedThoughtId === id ? 'graph' : state.viewMode,
     }))
+    if (thought) get().addCommit(`Deleted "${thought.title}"`, null, 'update')
   },
   
   addConnection: (source, target, type) => {
@@ -335,7 +368,7 @@ export const useStore = create<Store>((set, get) => ({
     const sourceThought = get().thoughts.find(t => t.id === source)
     const targetThought = get().thoughts.find(t => t.id === target)
     if (sourceThought && targetThought) {
-      get().addCommit(`Connected "${sourceThought.title}" to "${targetThought.title}"`, source, 'connect')
+      get().addCommit(`Connected "${sourceThought.title}" → "${targetThought.title}"`, source, 'connect')
     }
   },
   

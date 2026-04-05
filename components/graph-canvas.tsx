@@ -20,15 +20,15 @@ interface GraphEdge {
 }
 
 // Physics constants
-const REPULSION = 500
-const ATTRACTION = 0.005
+const REPULSION = 600
+const ATTRACTION = 0.006
 const DAMPING = 0.88
-const CENTER_GRAVITY = 0.006
+const CENTER_GRAVITY = 0.005
 
-// Minimal colors
-const EDGE_COLOR = 'rgba(255, 255, 255, 0.06)'
-const EDGE_HOVER_COLOR = 'rgba(255, 255, 255, 0.20)'
-const BG_COLOR = '#0a0a0c'
+// Colors
+const EDGE_COLOR = 'rgba(255, 255, 255, 0.08)'
+const EDGE_HOVER_COLOR = 'rgba(245, 158, 11, 0.4)'
+const BG_COLOR = '#0c0c0e'
 
 function hexToRgba(hex: string, alpha: number): string {
   const r = parseInt(hex.slice(1, 3), 16)
@@ -90,13 +90,13 @@ export function GraphCanvas() {
     // Create nodes with organic spiral distribution
     const nodes: GraphNode[] = thoughts.map((thought, i) => {
       const angle = i * 0.618 * Math.PI * 2 // Golden angle
-      const radius = 80 + Math.sqrt(i) * 30
-      const jitter = random() * 30 - 15
+      const radius = 100 + Math.sqrt(i) * 35
+      const jitter = random() * 40 - 20
       const x = centerX + Math.cos(angle) * (radius + jitter)
       const y = centerY + Math.sin(angle) * (radius + jitter)
       
       const count = connectionCount[thought.id] || 0
-      const nodeRadius = Math.max(2.5, Math.min(5, 2.5 + count * 0.3))
+      const nodeRadius = Math.max(3, Math.min(7, 3 + count * 0.4))
       
       return {
         id: thought.id,
@@ -127,7 +127,7 @@ export function GraphCanvas() {
     edgesRef.current = edges
   }, [thoughts, connections])
   
-  // Animation loop - runs continuously but uses refs for state
+  // Animation loop
   useEffect(() => {
     const canvas = canvasRef.current
     const container = containerRef.current
@@ -181,7 +181,7 @@ export function GraphCanvas() {
           const dy = nodeB.y - nodeA.y
           const dist = Math.sqrt(dx * dx + dy * dy) || 1
           
-          if (dist < 200) {
+          if (dist < 250) {
             const force = REPULSION / (dist * dist)
             const fx = (dx / dist) * force
             const fy = (dy / dist) * force
@@ -202,7 +202,7 @@ export function GraphCanvas() {
         const dy = edge.target.y - edge.source.y
         const dist = Math.sqrt(dx * dx + dy * dy) || 1
         
-        const force = (dist - 60) * ATTRACTION
+        const force = (dist - 80) * ATTRACTION
         const fx = (dx / dist) * force
         const fy = (dy / dist) * force
         
@@ -226,11 +226,11 @@ export function GraphCanvas() {
         node.y += node.vy
         
         // Soft bounds
-        const margin = 50
-        if (node.x < margin) node.vx += (margin - node.x) * 0.04
-        if (node.x > width - margin) node.vx += (width - margin - node.x) * 0.04
-        if (node.y < margin) node.vy += (margin - node.y) * 0.04
-        if (node.y > height - margin) node.vy += (height - margin - node.y) * 0.04
+        const margin = 80
+        if (node.x < margin) node.vx += (margin - node.x) * 0.05
+        if (node.x > width - margin) node.vx += (width - margin - node.x) * 0.05
+        if (node.y < margin) node.vy += (margin - node.y) * 0.05
+        if (node.y > height - margin) node.vy += (height - margin - node.y) * 0.05
       })
       
       // Render
@@ -265,7 +265,7 @@ export function GraphCanvas() {
       const hasHighlight = hoveredId || selectedId
       
       // Draw edges
-      ctx.lineWidth = 0.5
+      ctx.lineWidth = 1
       edges.forEach(edge => {
         const isHighlighted = 
           (connectedToHovered.has(edge.source.id) && connectedToHovered.has(edge.target.id)) ||
@@ -274,7 +274,7 @@ export function GraphCanvas() {
         ctx.beginPath()
         ctx.moveTo(edge.source.x, edge.source.y)
         ctx.lineTo(edge.target.x, edge.target.y)
-        ctx.strokeStyle = isHighlighted ? EDGE_HOVER_COLOR : hasHighlight ? 'rgba(255, 255, 255, 0.02)' : EDGE_COLOR
+        ctx.strokeStyle = isHighlighted ? EDGE_HOVER_COLOR : hasHighlight ? 'rgba(255, 255, 255, 0.03)' : EDGE_COLOR
         ctx.stroke()
       })
       
@@ -286,31 +286,38 @@ export function GraphCanvas() {
         const isDimmed = hasHighlight && !isConnected
         
         const color = NODE_COLORS[node.thought.color]
-        const radius = node.radius * (isHovered || isSelected ? 1.5 : 1)
+        const radius = node.radius * (isHovered || isSelected ? 1.6 : 1)
         
-        // Subtle glow for selected/hovered
+        // Glow for selected/hovered
         if (isHovered || isSelected) {
-          const gradient = ctx.createRadialGradient(node.x, node.y, 0, node.x, node.y, radius * 4)
-          gradient.addColorStop(0, hexToRgba(color, 0.15))
+          const gradient = ctx.createRadialGradient(node.x, node.y, 0, node.x, node.y, radius * 5)
+          gradient.addColorStop(0, hexToRgba(color, 0.25))
           gradient.addColorStop(1, 'rgba(0, 0, 0, 0)')
           ctx.fillStyle = gradient
           ctx.beginPath()
-          ctx.arc(node.x, node.y, radius * 4, 0, Math.PI * 2)
+          ctx.arc(node.x, node.y, radius * 5, 0, Math.PI * 2)
           ctx.fill()
         }
         
         // Node
         ctx.beginPath()
         ctx.arc(node.x, node.y, radius, 0, Math.PI * 2)
-        ctx.fillStyle = isDimmed ? hexToRgba(color, 0.15) : hexToRgba(color, 0.7)
+        ctx.fillStyle = isDimmed ? hexToRgba(color, 0.2) : hexToRgba(color, 0.85)
         ctx.fill()
+        
+        // Border for selected
+        if (isSelected) {
+          ctx.strokeStyle = hexToRgba(color, 0.6)
+          ctx.lineWidth = 2
+          ctx.stroke()
+        }
         
         // Label for selected/hovered
         if (isHovered || isSelected) {
-          ctx.font = '10px system-ui, -apple-system, sans-serif'
-          ctx.fillStyle = 'rgba(255, 255, 255, 0.7)'
+          ctx.font = '11px system-ui, -apple-system, sans-serif'
+          ctx.fillStyle = 'rgba(255, 255, 255, 0.85)'
           ctx.textAlign = 'center'
-          ctx.fillText(node.thought.title, node.x, node.y - radius - 6)
+          ctx.fillText(node.thought.title, node.x, node.y - radius - 8)
         }
       })
       
@@ -344,7 +351,7 @@ export function GraphCanvas() {
       const node = nodes[i]
       const dx = x - node.x
       const dy = y - node.y
-      if (dx * dx + dy * dy < (node.radius + 8) ** 2) return node
+      if (dx * dx + dy * dy < (node.radius + 10) ** 2) return node
     }
     return null
   }, [])
@@ -390,7 +397,17 @@ export function GraphCanvas() {
   const handleClick = useCallback((e: React.MouseEvent) => {
     const pos = getMousePos(e)
     const node = findNodeAt(pos.x, pos.y)
-    selectThought(node?.id || null)
+    if (node) {
+      selectThought(node.id)
+    }
+  }, [getMousePos, findNodeAt, selectThought])
+  
+  const handleDoubleClick = useCallback((e: React.MouseEvent) => {
+    const pos = getMousePos(e)
+    const node = findNodeAt(pos.x, pos.y)
+    if (node) {
+      selectThought(node.id)
+    }
   }, [getMousePos, findNodeAt, selectThought])
   
   const handleWheel = useCallback((e: React.WheelEvent) => {
@@ -402,7 +419,7 @@ export function GraphCanvas() {
     const mouseY = e.clientY - rect.top
     const t = transformRef.current
     
-    const delta = e.deltaY > 0 ? 0.94 : 1.06
+    const delta = e.deltaY > 0 ? 0.92 : 1.08
     const newScale = Math.max(0.3, Math.min(3, t.scale * delta))
     const scaleChange = newScale / t.scale
     
@@ -423,6 +440,7 @@ export function GraphCanvas() {
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseUp}
         onClick={handleClick}
+        onDoubleClick={handleDoubleClick}
         onWheel={handleWheel}
       />
     </div>

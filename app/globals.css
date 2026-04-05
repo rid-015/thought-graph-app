@@ -4,52 +4,55 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  /* Minimal dark palette - single accent, muted tones */
-  --background: #0a0a0c;
-  --foreground: #fafafa;
+  /* Dark base with warm undertones */
+  --background: #0c0c0e;
+  --foreground: #f5f5f5;
   
-  --card: rgba(255, 255, 255, 0.03);
-  --card-foreground: #fafafa;
+  --card: rgba(255, 255, 255, 0.04);
+  --card-foreground: #f5f5f5;
   
-  --popover: rgba(255, 255, 255, 0.03);
-  --popover-foreground: #fafafa;
+  --popover: rgba(20, 20, 22, 0.95);
+  --popover-foreground: #f5f5f5;
   
-  --primary: #6b7280;
-  --primary-foreground: #fafafa;
+  /* Warm amber accent */
+  --primary: #f59e0b;
+  --primary-foreground: #0c0c0e;
   
-  --secondary: rgba(255, 255, 255, 0.05);
-  --secondary-foreground: #fafafa;
+  --secondary: rgba(255, 255, 255, 0.08);
+  --secondary-foreground: #f5f5f5;
   
-  --muted: rgba(255, 255, 255, 0.06);
-  --muted-foreground: #71717a;
+  --muted: rgba(255, 255, 255, 0.08);
+  --muted-foreground: #a1a1aa;
   
-  --accent: rgba(255, 255, 255, 0.08);
-  --accent-foreground: #fafafa;
+  --accent: rgba(245, 158, 11, 0.15);
+  --accent-foreground: #f5f5f5;
   
-  --destructive: #7f1d1d;
-  --destructive-foreground: #fafafa;
+  --destructive: #ef4444;
+  --destructive-foreground: #f5f5f5;
   
-  --border: rgba(255, 255, 255, 0.08);
-  --input: rgba(255, 255, 255, 0.06);
-  --ring: rgba(255, 255, 255, 0.2);
-  --radius: 0.75rem;
+  --border: rgba(255, 255, 255, 0.10);
+  --input: rgba(255, 255, 255, 0.08);
+  --ring: rgba(245, 158, 11, 0.4);
+  --radius: 0.625rem;
   
-  /* Muted node colors - low saturation */
-  --node-gray: #9ca3af;
-  --node-slate: #94a3b8;
-  --node-zinc: #a1a1aa;
-  --node-neutral: #a3a3a3;
-  --node-stone: #a8a29e;
+  /* Node colors - muted but visible */
+  --node-amber: #f59e0b;
+  --node-orange: #f97316;
+  --node-rose: #f43f5e;
+  --node-violet: #8b5cf6;
+  --node-blue: #3b82f6;
+  --node-emerald: #10b981;
+  --node-slate: #64748b;
   
   /* Sidebar */
-  --sidebar: rgba(255, 255, 255, 0.02);
-  --sidebar-foreground: #fafafa;
-  --sidebar-primary: #9ca3af;
-  --sidebar-primary-foreground: #0a0a0c;
-  --sidebar-accent: rgba(255, 255, 255, 0.05);
-  --sidebar-accent-foreground: #fafafa;
-  --sidebar-border: rgba(255, 255, 255, 0.06);
-  --sidebar-ring: rgba(255, 255, 255, 0.2);
+  --sidebar: rgba(12, 12, 14, 0.95);
+  --sidebar-foreground: #f5f5f5;
+  --sidebar-primary: #f59e0b;
+  --sidebar-primary-foreground: #0c0c0e;
+  --sidebar-accent: rgba(245, 158, 11, 0.1);
+  --sidebar-accent-foreground: #f5f5f5;
+  --sidebar-border: rgba(255, 255, 255, 0.08);
+  --sidebar-ring: rgba(245, 158, 11, 0.4);
 }
 
 @theme inline {
@@ -97,14 +100,14 @@
     font-feature-settings: "ss01", "ss02", "cv01";
   }
   ::selection {
-    background: rgba(156, 163, 175, 0.2);
+    background: rgba(245, 158, 11, 0.25);
   }
 }
 
-/* Minimal scrollbar */
+/* Refined scrollbar */
 ::-webkit-scrollbar {
-  width: 4px;
-  height: 4px;
+  width: 6px;
+  height: 6px;
 }
 
 ::-webkit-scrollbar-track {
@@ -112,32 +115,40 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.20);
 }
 
 /* Glassmorphism utilities */
 @layer utilities {
   .glass {
-    background: rgba(255, 255, 255, 0.03);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.06);
+    background: rgba(18, 18, 20, 0.85);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
   }
   
   .glass-subtle {
-    background: rgba(255, 255, 255, 0.02);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    border: 1px solid rgba(255, 255, 255, 0.04);
+    background: rgba(14, 14, 16, 0.90);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-right: 1px solid rgba(255, 255, 255, 0.06);
+  }
+  
+  .glass-card {
+    background: rgba(255, 255, 255, 0.03);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 0.75rem;
   }
   
   .glass-hover:hover {
-    background: rgba(255, 255, 255, 0.05);
-    border-color: rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(255, 255, 255, 0.10);
   }
 }
