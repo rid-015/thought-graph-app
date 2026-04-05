@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useCallback } from 'react'
+import { useEffect, useRef, useCallback, useState } from 'react'
 import { useStore, NODE_COLORS, type Thought, type Connection } from '@/lib/store'
 
 interface GraphNode {
@@ -20,14 +20,25 @@ interface GraphEdge {
 }
 
 // Physics constants
-const REPULSION = 600
-const ATTRACTION = 0.006
-const DAMPING = 0.88
-const CENTER_GRAVITY = 0.005
+const REPULSION = 500
+const ATTRACTION = 0.005
+const DAMPING = 0.9
+const CENTER_GRAVITY = 0.004
 
-// Colors
-const EDGE_COLOR = 'rgba(255, 255, 255, 0.08)'
-const EDGE_HOVER_COLOR = 'rgba(245, 158, 11, 0.4)'
+// Theme-oriented muted colors (amber/warm palette)
+const THEME_COLORS: Record<string, string> = {
+  amber: '#b45309',
+  orange: '#c2410c', 
+  rose: '#9f1239',
+  violet: '#6d28d9',
+  blue: '#1d4ed8',
+  emerald: '#047857',
+  slate: '#475569',
+}
+
+// Edge colors
+const EDGE_COLOR = 'rgba(255, 255, 255, 0.06)'
+const EDGE_HOVER_COLOR = 'rgba(245, 158, 11, 0.35)'
 const BG_COLOR = '#0c0c0e'
 
 function hexToRgba(hex: string, alpha: number): string {
@@ -45,6 +56,14 @@ function seededRandom(seed: number) {
   }
 }
 
+interface TooltipData {
+  x: number
+  y: number
+  title: string
+  folder: string
+  connections: number
+}
+
 export function GraphCanvas() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
@@ -59,8 +78,11 @@ export function GraphCanvas() {
   const animationRef = useRef<number | null>(null)
   const initializedRef = useRef(false)
   
+  const [tooltip, setTooltip] = useState<TooltipData | null>(null)
+  
   const thoughts = useStore(s => s.thoughts)
   const connections = useStore(s => s.connections)
+  const folders = useStore(s => s.folders)
   const selectedId = useStore(s => s.selectedThoughtId)
   const hoveredId = useStore(s => s.hoveredThoughtId)
   const selectThought = useStore(s => s.selectThought)
@@ -69,6 +91,9 @@ export function GraphCanvas() {
   // Store refs for callbacks
   const stateRef = useRef({ selectedId, hoveredId })
   stateRef.current = { selectedId, hoveredId }
+  
+  // Count connections per thought
+  const connectionCountRef = useRef<Record<string, number>>({})
   
   // Initialize graph data only once
   useEffect(() => {
@@ -86,17 +111,19 @@ export function GraphCanvas() {
       connectionCount[c.source] = (connectionCount[c.source] || 0) + 1
       connectionCount[c.target] = (connectionCount[c.target] || 0) + 1
     })
+    connectionCountRef.current = connectionCount
     
-    // Create nodes with organic spiral distribution
+    // Create nodes with organic spiral distribution - SMALLER NODES
     const nodes: GraphNode[] = thoughts.map((thought, i) => {
       const angle = i * 0.618 * Math.PI * 2 // Golden angle
-      const radius = 100 + Math.sqrt(i) * 35
-      const jitter = random() * 40 - 20
+      const radius = 80 + Math.sqrt(i) * 30
+      const jitter = random() * 30 - 15
       const x = centerX + Math.cos(angle) * (radius + jitter)
       const y = centerY + Math.sin(angle) * (radius + jitter)
       
       const count = connectionCount[thought.id] || 0
-      const nodeRadius = Math.max(3, Math.min(7, 3 + count * 0.4))
+      // Smaller base radius: 2-4 instead of 3-7
+      const nodeRadius = Math.max(2, Math.min(4, 2 + count * 0.2))
       
       return {
         id: thought.id,
@@ -181,7 +208,7 @@ export function GraphCanvas() {
           const dy = nodeB.y - nodeA.y
           const dist = Math.sqrt(dx * dx + dy * dy) || 1
           
-          if (dist < 250) {
+          if (dist < 200) {
             const force = REPULSION / (dist * dist)
             const fx = (dx / dist) * force
             const fy = (dy / dist) * force
@@ -202,7 +229,7 @@ export function GraphCanvas() {
         const dy = edge.target.y - edge.source.y
         const dist = Math.sqrt(dx * dx + dy * dy) || 1
         
-        const force = (dist - 80) * ATTRACTION
+        const force = (dist - 60) * ATTRACTION
         const fx = (dx / dist) * force
         const fy = (dy / dist) * force
         
@@ -226,11 +253,11 @@ export function GraphCanvas() {
         node.y += node.vy
         
         // Soft bounds
-        const margin = 80
-        if (node.x < margin) node.vx += (margin - node.x) * 0.05
-        if (node.x > width - margin) node.vx += (width - margin - node.x) * 0.05
-        if (node.y < margin) node.vy += (margin - node.y) * 0.05
-        if (node.y > height - margin) node.vy += (height - margin - node.y) * 0.05
+        const margin = 60
+        if (node.x < margin) node.vx += (margin - node.x) * 0.04
+        if (node.x > width - margin) node.vx += (width - margin - node.x) * 0.04
+        if (node.y < margin) node.vy += (margin - node.y) * 0.04
+        if (node.y > height - margin) node.vy += (height - margin - node.y) * 0.04
       })
       
       // Render
@@ -264,8 +291,8 @@ export function GraphCanvas() {
       
       const hasHighlight = hoveredId || selectedId
       
-      // Draw edges
-      ctx.lineWidth = 1
+      // Draw edges - thinner lines
+      ctx.lineWidth = 0.5
       edges.forEach(edge => {
         const isHighlighted = 
           (connectedToHovered.has(edge.source.id) && connectedToHovered.has(edge.target.id)) ||
@@ -274,7 +301,7 @@ export function GraphCanvas() {
         ctx.beginPath()
         ctx.moveTo(edge.source.x, edge.source.y)
         ctx.lineTo(edge.target.x, edge.target.y)
-        ctx.strokeStyle = isHighlighted ? EDGE_HOVER_COLOR : hasHighlight ? 'rgba(255, 255, 255, 0.03)' : EDGE_COLOR
+        ctx.strokeStyle = isHighlighted ? EDGE_HOVER_COLOR : hasHighlight ? 'rgba(255, 255, 255, 0.02)' : EDGE_COLOR
         ctx.stroke()
       })
       
@@ -285,39 +312,33 @@ export function GraphCanvas() {
         const isConnected = connectedToHovered.has(node.id) || connectedToSelected.has(node.id)
         const isDimmed = hasHighlight && !isConnected
         
-        const color = NODE_COLORS[node.thought.color]
-        const radius = node.radius * (isHovered || isSelected ? 1.6 : 1)
+        // Use theme-oriented color
+        const themeColor = THEME_COLORS[node.thought.color] || THEME_COLORS.slate
+        const radius = node.radius * (isHovered || isSelected ? 2 : 1)
         
-        // Glow for selected/hovered
+        // Subtle glow for selected/hovered
         if (isHovered || isSelected) {
-          const gradient = ctx.createRadialGradient(node.x, node.y, 0, node.x, node.y, radius * 5)
-          gradient.addColorStop(0, hexToRgba(color, 0.25))
+          const gradient = ctx.createRadialGradient(node.x, node.y, 0, node.x, node.y, radius * 6)
+          gradient.addColorStop(0, hexToRgba(themeColor, 0.2))
           gradient.addColorStop(1, 'rgba(0, 0, 0, 0)')
           ctx.fillStyle = gradient
           ctx.beginPath()
-          ctx.arc(node.x, node.y, radius * 5, 0, Math.PI * 2)
+          ctx.arc(node.x, node.y, radius * 6, 0, Math.PI * 2)
           ctx.fill()
         }
         
-        // Node
+        // Node dot
         ctx.beginPath()
         ctx.arc(node.x, node.y, radius, 0, Math.PI * 2)
-        ctx.fillStyle = isDimmed ? hexToRgba(color, 0.2) : hexToRgba(color, 0.85)
+        ctx.fillStyle = isDimmed ? hexToRgba(themeColor, 0.15) : hexToRgba(themeColor, 0.8)
         ctx.fill()
         
-        // Border for selected
-        if (isSelected) {
-          ctx.strokeStyle = hexToRgba(color, 0.6)
-          ctx.lineWidth = 2
-          ctx.stroke()
-        }
-        
-        // Label for selected/hovered
-        if (isHovered || isSelected) {
-          ctx.font = '11px system-ui, -apple-system, sans-serif'
-          ctx.fillStyle = 'rgba(255, 255, 255, 0.85)'
-          ctx.textAlign = 'center'
-          ctx.fillText(node.thought.title, node.x, node.y - radius - 8)
+        // Bright center for visibility
+        if (!isDimmed) {
+          ctx.beginPath()
+          ctx.arc(node.x, node.y, radius * 0.4, 0, Math.PI * 2)
+          ctx.fillStyle = 'rgba(255, 255, 255, 0.6)'
+          ctx.fill()
         }
       })
       
@@ -337,11 +358,13 @@ export function GraphCanvas() {
   // Mouse handlers
   const getMousePos = useCallback((e: React.MouseEvent) => {
     const rect = canvasRef.current?.getBoundingClientRect()
-    if (!rect) return { x: 0, y: 0 }
+    if (!rect) return { x: 0, y: 0, screenX: 0, screenY: 0 }
     const t = transformRef.current
     return {
       x: (e.clientX - rect.left - t.x) / t.scale,
       y: (e.clientY - rect.top - t.y) / t.scale,
+      screenX: e.clientX - rect.left,
+      screenY: e.clientY - rect.top,
     }
   }, [])
   
@@ -351,7 +374,8 @@ export function GraphCanvas() {
       const node = nodes[i]
       const dx = x - node.x
       const dy = y - node.y
-      if (dx * dx + dy * dy < (node.radius + 10) ** 2) return node
+      // Larger hit area for smaller nodes
+      if (dx * dx + dy * dy < (node.radius + 12) ** 2) return node
     }
     return null
   }, [])
@@ -380,14 +404,30 @@ export function GraphCanvas() {
       drag.draggedNode.y = pos.y
       drag.draggedNode.vx = 0
       drag.draggedNode.vy = 0
+      setTooltip(null)
     } else if (drag.isDragging) {
       transformRef.current.x = e.clientX - drag.dragStart.x
       transformRef.current.y = e.clientY - drag.dragStart.y
+      setTooltip(null)
     } else {
       const node = findNodeAt(pos.x, pos.y)
       hoverThought(node?.id || null)
+      
+      if (node) {
+        const folder = folders.find(f => f.id === node.thought.folderId)
+        const connCount = connectionCountRef.current[node.id] || 0
+        setTooltip({
+          x: pos.screenX,
+          y: pos.screenY,
+          title: node.thought.title,
+          folder: folder?.name || 'Uncategorized',
+          connections: connCount,
+        })
+      } else {
+        setTooltip(null)
+      }
     }
-  }, [getMousePos, findNodeAt, hoverThought])
+  }, [getMousePos, findNodeAt, hoverThought, folders])
   
   const handleMouseUp = useCallback(() => {
     dragStateRef.current.isDragging = false
@@ -395,14 +435,6 @@ export function GraphCanvas() {
   }, [])
   
   const handleClick = useCallback((e: React.MouseEvent) => {
-    const pos = getMousePos(e)
-    const node = findNodeAt(pos.x, pos.y)
-    if (node) {
-      selectThought(node.id)
-    }
-  }, [getMousePos, findNodeAt, selectThought])
-  
-  const handleDoubleClick = useCallback((e: React.MouseEvent) => {
     const pos = getMousePos(e)
     const node = findNodeAt(pos.x, pos.y)
     if (node) {
@@ -430,6 +462,13 @@ export function GraphCanvas() {
     }
   }, [])
   
+  const handleMouseLeave = useCallback(() => {
+    dragStateRef.current.isDragging = false
+    dragStateRef.current.draggedNode = null
+    setTooltip(null)
+    hoverThought(null)
+  }, [hoverThought])
+  
   return (
     <div ref={containerRef} className="w-full h-full relative overflow-hidden">
       <canvas
@@ -438,11 +477,44 @@ export function GraphCanvas() {
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
-        onMouseLeave={handleMouseUp}
+        onMouseLeave={handleMouseLeave}
         onClick={handleClick}
-        onDoubleClick={handleDoubleClick}
         onWheel={handleWheel}
       />
+      
+      {/* Tooltip overlay - like the reference image */}
+      {tooltip && (
+        <div 
+          className="absolute pointer-events-none z-50"
+          style={{
+            left: tooltip.x + 16,
+            top: tooltip.y - 8,
+            transform: 'translateY(-100%)',
+          }}
+        >
+          <div className="bg-[#1a1a1f]/95 backdrop-blur-md border border-white/10 rounded-lg px-3 py-2 shadow-xl">
+            <div className="text-[13px] font-medium text-white/90 mb-1">
+              {tooltip.title}
+            </div>
+            <div className="flex items-center gap-3 text-[11px] text-white/50">
+              <span>{tooltip.folder}</span>
+              <span className="text-white/30">|</span>
+              <span>{tooltip.connections} connections</span>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* Graph view indicator */}
+      <div className="absolute top-4 left-4 flex items-center gap-2 px-3 py-1.5 rounded-md bg-white/5 border border-white/8">
+        <div className="w-1.5 h-1.5 rounded-full bg-amber-500/70" />
+        <span className="text-[11px] text-white/50">Graph View</span>
+      </div>
+      
+      {/* Controls hint */}
+      <div className="absolute bottom-4 left-4 text-[10px] text-white/30">
+        Drag to pan · Scroll to zoom · Click node to view
+      </div>
     </div>
   )
 }
