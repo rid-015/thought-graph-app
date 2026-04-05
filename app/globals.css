@@ -152,3 +152,80 @@
     border-color: rgba(255, 255, 255, 0.10);
   }
 }
+
+/* Techy button styles */
+@layer components {
+  .btn-tech {
+    @apply relative px-4 py-2 text-xs font-mono tracking-wider uppercase;
+    @apply bg-[#0f0f11]/90 border border-white/8 text-white/70;
+    @apply hover:bg-white/5 hover:text-white/90 hover:border-white/12;
+    @apply active:bg-white/8 transition-all duration-150;
+  }
+  
+  .btn-tech::before,
+  .btn-tech::after {
+    content: '';
+    @apply absolute w-2 h-px bg-amber-500/50;
+  }
+  
+  .btn-tech::before {
+    @apply -top-px -left-px;
+    box-shadow: 0 0 0 1px rgba(245, 158, 11, 0.5);
+    clip-path: polygon(0 0, 100% 0, 100% 100%);
+  }
+  
+  .btn-tech::after {
+    @apply -bottom-px -right-px;
+    box-shadow: 0 0 0 1px rgba(245, 158, 11, 0.3);
+    clip-path: polygon(0 0, 100% 0, 100% 100%);
+  }
+  
+  .btn-tech-primary {
+    @apply relative px-4 py-2 text-xs font-mono tracking-wider uppercase;
+    @apply bg-amber-500/15 border border-amber-500/30 text-amber-400;
+    @apply hover:bg-amber-500/20 hover:border-amber-500/40;
+    @apply active:bg-amber-500/25 transition-all duration-150;
+  }
+  
+  .btn-tech-primary::before {
+    content: '';
+    @apply absolute -top-px -left-px w-2 h-px bg-amber-500/70;
+  }
+  
+  .btn-tech-primary::after {
+    content: '';
+    @apply absolute -top-px -left-px w-px h-2 bg-amber-500/70;
+  }
+  
+  .btn-tech-ghost {
+    @apply relative px-3 py-1.5 text-xs font-mono tracking-wide;
+    @apply text-white/50 hover:text-white/80 hover:bg-white/5;
+    @apply active:bg-white/8 transition-all duration-150;
+  }
+  
+  .btn-icon-tech {
+    @apply relative p-2 text-white/40 hover:text-white/70;
+    @apply hover:bg-white/5 active:bg-white/8 transition-all duration-150;
+  }
+  
+  .btn-icon-tech::before {
+    content: '';
+    @apply absolute top-0 left-0 w-1.5 h-px bg-white/20;
+  }
+  
+  .btn-icon-tech::after {
+    content: '';
+    @apply absolute top-0 left-0 w-px h-1.5 bg-white/20;
+  }
+  
+  .input-tech {
+    @apply w-full h-9 px-3 text-sm bg-[#0f0f11] border border-white/8;
+    @apply placeholder:text-white/30 text-white/80;
+    @apply focus:outline-none focus:border-amber-500/30 focus:bg-[#101012];
+    @apply transition-all duration-150;
+  }
+  
+  .input-tech::placeholder {
+    @apply font-mono text-xs tracking-wide;
+  }
+}

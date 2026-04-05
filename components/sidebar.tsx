@@ -10,9 +10,9 @@ import {
   ChevronRight,
   ChevronDown,
   Folder,
-  FolderOpen,
   FileText,
   Network,
+  X,
 } from 'lucide-react'
 
 type Filter = 'all' | 'starred' | 'recent'
@@ -92,17 +92,23 @@ export function Sidebar() {
       <div className="p-4 border-b border-white/8">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-amber-500/20 to-orange-500/20 border border-amber-500/20 flex items-center justify-center">
-              <Network className="w-3.5 h-3.5 text-amber-400" />
+            {/* Techy logo */}
+            <div className="relative w-7 h-7 flex items-center justify-center">
+              <div className="absolute inset-0 bg-amber-500/10 border border-amber-500/30" />
+              <div className="absolute -top-px -left-px w-2 h-px bg-amber-500/70" />
+              <div className="absolute -top-px -left-px w-px h-2 bg-amber-500/70" />
+              <div className="absolute -bottom-px -right-px w-2 h-px bg-amber-500/50" />
+              <div className="absolute -bottom-px -right-px w-px h-2 bg-amber-500/50" />
+              <Network className="w-3.5 h-3.5 text-amber-400 relative z-10" />
             </div>
-            <span className="font-semibold text-sm tracking-tight text-white/90">Nodus</span>
+            <span className="font-mono text-xs tracking-widest uppercase text-white/70">Nodus</span>
           </div>
           <button
             onClick={() => { setViewMode('graph'); selectThought(null) }}
-            className={`p-1.5 rounded-md transition-colors ${
+            className={`btn-icon-tech ${
               viewMode === 'graph' 
-                ? 'bg-amber-500/15 text-amber-400' 
-                : 'text-white/40 hover:text-white/60 hover:bg-white/5'
+                ? 'text-amber-400 bg-amber-500/10' 
+                : ''
             }`}
             title="Graph View"
           >
@@ -115,10 +121,10 @@ export function Sidebar() {
           <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/30" />
           <input
             type="text"
-            placeholder="Search thoughts..."
+            placeholder="search..."
             value={search}
             onChange={e => setSearch(e.target.value)}
-            className="w-full h-9 pl-8 pr-3 text-sm bg-white/5 border border-white/8 rounded-lg placeholder:text-white/30 text-white/80 focus:outline-none focus:border-amber-500/30 focus:bg-white/6 transition-all"
+            className="input-tech pl-8 font-mono text-xs"
           />
         </div>
       </div>
@@ -127,40 +133,40 @@ export function Sidebar() {
       <div className="px-2 py-2 border-b border-white/6">
         <button
           onClick={() => setFilter('all')}
-          className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] transition-all ${
+          className={`w-full flex items-center gap-2.5 px-3 py-2 text-[11px] font-mono tracking-wide transition-all ${
             filter === 'all' 
               ? 'bg-white/8 text-white/90' 
               : 'text-white/50 hover:text-white/70 hover:bg-white/5'
           }`}
         >
-          <Folder className="w-4 h-4" />
-          All Thoughts
-          <span className="ml-auto text-[11px] text-white/40 tabular-nums bg-white/5 px-1.5 py-0.5 rounded">{thoughts.length}</span>
+          <Folder className="w-3.5 h-3.5" />
+          <span className="uppercase">All</span>
+          <span className="ml-auto text-[10px] text-white/40 tabular-nums">{thoughts.length}</span>
         </button>
         <button
           onClick={() => setFilter('starred')}
-          className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] transition-all ${
+          className={`w-full flex items-center gap-2.5 px-3 py-2 text-[11px] font-mono tracking-wide transition-all ${
             filter === 'starred' 
               ? 'bg-white/8 text-white/90' 
               : 'text-white/50 hover:text-white/70 hover:bg-white/5'
           }`}
         >
-          <Star className="w-4 h-4" />
-          Starred
-          <span className="ml-auto text-[11px] text-white/40 tabular-nums bg-white/5 px-1.5 py-0.5 rounded">
+          <Star className="w-3.5 h-3.5" />
+          <span className="uppercase">Starred</span>
+          <span className="ml-auto text-[10px] text-white/40 tabular-nums">
             {thoughts.filter(t => t.starred).length}
           </span>
         </button>
         <button
           onClick={() => setFilter('recent')}
-          className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] transition-all ${
+          className={`w-full flex items-center gap-2.5 px-3 py-2 text-[11px] font-mono tracking-wide transition-all ${
             filter === 'recent' 
               ? 'bg-white/8 text-white/90' 
               : 'text-white/50 hover:text-white/70 hover:bg-white/5'
           }`}
         >
-          <Clock className="w-4 h-4" />
-          Recent
+          <Clock className="w-3.5 h-3.5" />
+          <span className="uppercase">Recent</span>
         </button>
       </div>
       
@@ -169,22 +175,22 @@ export function Sidebar() {
         <div className="p-3 border-b border-white/6 bg-white/3">
           <input
             type="text"
-            placeholder="Thought title..."
+            placeholder="thought.title"
             value={newTitle}
             onChange={e => setNewTitle(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && handleCreate()}
             autoFocus
-            className="w-full h-9 px-3 text-sm bg-white/5 border border-white/10 rounded-lg placeholder:text-white/30 text-white/80 focus:outline-none focus:border-amber-500/30 mb-2"
+            className="input-tech mb-2 font-mono text-xs"
           />
           <div className="flex gap-1.5 mb-3">
             {(Object.keys(NODE_COLORS) as NodeColor[]).map(color => (
               <button
                 key={color}
                 onClick={() => setSelectedColor(color)}
-                className={`w-6 h-6 rounded-full transition-all ${
+                className={`w-5 h-5 transition-all ${
                   selectedColor === color 
-                    ? 'ring-2 ring-white/50 ring-offset-2 ring-offset-[#0c0c0e] scale-110' 
-                    : 'hover:scale-110 opacity-70 hover:opacity-100'
+                    ? 'ring-1 ring-white/50 ring-offset-1 ring-offset-[#0c0c0e] scale-110' 
+                    : 'hover:scale-110 opacity-60 hover:opacity-100'
                 }`}
                 style={{ backgroundColor: NODE_COLORS[color] }}
               />
@@ -193,7 +199,7 @@ export function Sidebar() {
           <select
             value={createInFolder || folders[0]?.id || ''}
             onChange={e => setCreateInFolder(e.target.value)}
-            className="w-full h-8 px-2 text-xs bg-white/5 border border-white/8 rounded-lg text-white/60 focus:outline-none mb-3"
+            className="w-full h-8 px-2 text-[10px] font-mono tracking-wide bg-[#0f0f11] border border-white/8 text-white/60 focus:outline-none mb-3 uppercase"
           >
             {folders.map(f => (
               <option key={f.id} value={f.id} className="bg-[#0c0c0e]">{f.name}</option>
@@ -203,13 +209,13 @@ export function Sidebar() {
             <button
               onClick={handleCreate}
               disabled={!newTitle.trim()}
-              className="flex-1 h-8 text-xs font-medium bg-amber-500 text-black rounded-lg hover:bg-amber-400 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+              className="btn-tech-primary flex-1 h-8 disabled:opacity-30 disabled:cursor-not-allowed"
             >
-              Create Thought
+              Create
             </button>
             <button
               onClick={() => { setIsCreating(false); setCreateInFolder(null) }}
-              className="flex-1 h-8 text-xs bg-white/5 text-white/60 rounded-lg hover:bg-white/8 transition-colors"
+              className="btn-tech flex-1 h-8"
             >
               Cancel
             </button>
@@ -219,9 +225,9 @@ export function Sidebar() {
         <div className="px-2 py-2 border-b border-white/6">
           <button
             onClick={() => startCreating()}
-            className="w-full flex items-center justify-center gap-2 h-9 text-[13px] font-medium text-amber-400 bg-amber-500/10 hover:bg-amber-500/15 border border-amber-500/20 rounded-lg transition-all"
+            className="btn-tech-primary w-full flex items-center justify-center gap-2 h-9"
           >
-            <Plus className="w-4 h-4" />
+            <Plus className="w-3.5 h-3.5" />
             New Thought
           </button>
         </div>
@@ -240,25 +246,25 @@ export function Sidebar() {
                 <div key={folder.id}>
                   <div
                     onClick={() => toggleFolder(folder.id)}
-                    className="w-full flex items-center gap-2 px-2 py-2 rounded-lg text-[13px] text-white/60 hover:text-white/80 hover:bg-white/5 transition-all group cursor-pointer"
+                    className="w-full flex items-center gap-2 px-2 py-2 text-[11px] font-mono tracking-wide text-white/60 hover:text-white/80 hover:bg-white/5 transition-all group cursor-pointer"
                     role="button"
                     tabIndex={0}
                     onKeyDown={(e) => e.key === 'Enter' && toggleFolder(folder.id)}
                   >
                     {isExpanded ? (
-                      <ChevronDown className="w-3.5 h-3.5 text-white/30" />
+                      <ChevronDown className="w-3 h-3 text-white/30" />
                     ) : (
-                      <ChevronRight className="w-3.5 h-3.5 text-white/30" />
+                      <ChevronRight className="w-3 h-3 text-white/30" />
                     )}
                     <span
-                      className="w-2 h-2 rounded-full"
+                      className="w-1.5 h-1.5"
                       style={{ backgroundColor: NODE_COLORS[folder.color] }}
                     />
-                    <span className="flex-1 text-left truncate">{folder.name}</span>
-                    <span className="text-[11px] text-white/30 tabular-nums">{folderThoughts.length}</span>
+                    <span className="flex-1 text-left truncate uppercase">{folder.name}</span>
+                    <span className="text-[10px] text-white/30 tabular-nums">{folderThoughts.length}</span>
                     <button
                       onClick={(e) => { e.stopPropagation(); startCreating(folder.id) }}
-                      className="opacity-0 group-hover:opacity-100 p-0.5 hover:bg-white/10 rounded transition-all"
+                      className="opacity-0 group-hover:opacity-100 p-0.5 hover:bg-white/10 transition-all"
                     >
                       <Plus className="w-3 h-3 text-white/40" />
                     </button>
@@ -270,16 +276,16 @@ export function Sidebar() {
                         <button
                           key={`${folder.id}-${thought.id}-${idx}`}
                           onClick={() => selectThought(thought.id)}
-                          className={`w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-[13px] text-left transition-all active:bg-white/8 ${
+                          className={`w-full flex items-center gap-2 px-2 py-1.5 text-[11px] text-left transition-all active:bg-white/8 ${
                             selectedId === thought.id 
-                              ? 'bg-white/10 text-white/90 border-l-2 border-white/40 -ml-[3px] pl-[11px]' 
+                              ? 'bg-white/10 text-white/90 border-l border-amber-500/50 -ml-px pl-[9px]' 
                               : 'text-white/50 hover:text-white/70 hover:bg-white/5'
                           }`}
                         >
-                          <FileText className="w-3.5 h-3.5 text-white/30 flex-shrink-0" />
+                          <FileText className="w-3 h-3 text-white/30 flex-shrink-0" />
                           <span className="truncate flex-1">{thought.title}</span>
                           {thought.starred && (
-                            <Star className="w-3 h-3 text-amber-400 fill-amber-400 flex-shrink-0" />
+                            <Star className="w-2.5 h-2.5 text-amber-400 fill-amber-400 flex-shrink-0" />
                           )}
                         </button>
                       ))}
@@ -293,27 +299,27 @@ export function Sidebar() {
           // Flat view for starred/recent
           <div className="space-y-0.5 px-2">
             {filtered.length === 0 ? (
-              <p className="text-center text-sm text-white/30 py-8">
-                {filter === 'starred' ? 'No starred thoughts' : 'No recent thoughts'}
+              <p className="text-center text-[11px] font-mono text-white/30 py-8 uppercase tracking-wide">
+                {filter === 'starred' ? 'No starred' : 'No recent'}
               </p>
             ) : (
               filtered.map((thought, idx) => (
                 <button
                   key={`flat-${thought.id}-${idx}`}
                   onClick={() => selectThought(thought.id)}
-                  className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] text-left transition-all active:bg-white/8 ${
+                  className={`w-full flex items-center gap-2.5 px-3 py-2 text-[11px] text-left transition-all active:bg-white/8 ${
                     selectedId === thought.id 
                       ? 'bg-white/10 text-white/90' 
                       : 'text-white/60 hover:text-white/80 hover:bg-white/5'
                   }`}
                 >
                   <span
-                    className="w-2 h-2 rounded-full flex-shrink-0"
+                    className="w-1.5 h-1.5 flex-shrink-0"
                     style={{ backgroundColor: NODE_COLORS[thought.color] }}
                   />
                   <span className="truncate flex-1">{thought.title}</span>
                   {thought.starred && (
-                    <Star className="w-3 h-3 text-amber-400 fill-amber-400 flex-shrink-0" />
+                    <Star className="w-2.5 h-2.5 text-amber-400 fill-amber-400 flex-shrink-0" />
                   )}
                 </button>
               ))
@@ -323,8 +329,8 @@ export function Sidebar() {
       </div>
       
       {/* Footer stats */}
-      <div className="px-4 py-3 border-t border-white/6 text-[11px] text-white/30">
-        <div className="flex justify-between">
+      <div className="px-4 py-3 border-t border-white/6 text-[10px] font-mono text-white/30 tracking-wide">
+        <div className="flex justify-between uppercase">
           <span>{thoughts.length} thoughts</span>
           <span>{folders.length} folders</span>
         </div>
