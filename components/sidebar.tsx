@@ -238,9 +238,12 @@ export function Sidebar() {
               
               return (
                 <div key={folder.id}>
-                  <button
+                  <div
                     onClick={() => toggleFolder(folder.id)}
-                    className="w-full flex items-center gap-2 px-2 py-2 rounded-lg text-[13px] text-white/60 hover:text-white/80 hover:bg-white/5 transition-all group"
+                    className="w-full flex items-center gap-2 px-2 py-2 rounded-lg text-[13px] text-white/60 hover:text-white/80 hover:bg-white/5 transition-all group cursor-pointer"
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => e.key === 'Enter' && toggleFolder(folder.id)}
                   >
                     {isExpanded ? (
                       <ChevronDown className="w-3.5 h-3.5 text-white/30" />
@@ -259,7 +262,7 @@ export function Sidebar() {
                     >
                       <Plus className="w-3 h-3 text-white/40" />
                     </button>
-                  </button>
+                  </div>
                   
                   {isExpanded && folderThoughts.length > 0 && (
                     <div className="ml-6 mt-0.5 space-y-0.5 border-l border-white/8 pl-2">
