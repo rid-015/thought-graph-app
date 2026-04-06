@@ -39,9 +39,9 @@ export default function NodusGraphApp() {
       </div>
 
       {/* ── MOBILE LAYOUT (< md) ── */}
-      <div className="flex md:hidden flex-col w-full h-full">
-        {/* Mobile top bar */}
-        <header className="flex items-center justify-between px-4 py-3 border-b border-white/8 glass-subtle flex-shrink-0">
+      <div className="flex md:hidden flex-col w-full h-full relative">
+        {/* Mobile top bar - fixed */}
+        <header className="sticky top-0 z-30 flex items-center justify-between px-4 py-3 border-b border-white/8 glass-subtle">
           <div className="flex items-center gap-2">
             <div className="w-7 h-7 bg-[#f59e0b]/15 flex items-center justify-center">
               <Network className="w-4 h-4 text-[#f59e0b]" />
@@ -58,22 +58,22 @@ export default function NodusGraphApp() {
         </header>
 
         {/* Mobile main content */}
-        <main className="flex-1 relative overflow-hidden">
+        <main className="flex-1 min-h-0 relative overflow-hidden">
           {mobileTab === 'graph' && (
-            <div className="h-full animate-scale-fade-in">
+            <div key="tab-graph" className="h-full animate-scale-fade-in">
               <GraphCanvas />
             </div>
           )}
           {mobileTab === 'notes' && (
-            <div className="h-full animate-scale-fade-in">
+            <div key="tab-notes" className="h-full animate-scale-fade-in">
               {viewMode === 'editor' ? <ThoughtEditor /> : (
                 <div className="flex-1 flex items-center justify-center h-full">
-                  <div className="text-center px-6">
+                  <div className="text-center px-6 animate-fade-up">
                     <BookOpen className="w-10 h-10 text-white/20 mx-auto mb-3" />
                     <p className="text-white/40 text-sm mb-4">Select a thought to read or edit it</p>
                     <button
                       onClick={() => setMobileSidebarOpen(true)}
-                      className="btn-primary text-sm px-4 py-2"
+                      className="btn-primary text-sm px-4 py-2 hover-lift"
                     >
                       Browse Thoughts
                     </button>
@@ -83,14 +83,14 @@ export default function NodusGraphApp() {
             </div>
           )}
           {mobileTab === 'activity' && (
-            <div className="h-full overflow-y-auto animate-scale-fade-in">
+            <div key="tab-activity" className="h-full overflow-y-auto animate-scale-fade-in">
               <CommitPanel />
             </div>
           )}
         </main>
 
-        {/* Mobile bottom nav */}
-        <nav className="flex-shrink-0 flex items-center border-t border-white/8 bg-[#0c0c0e]/95 backdrop-blur-sm safe-area-bottom">
+        {/* Mobile bottom nav - fixed */}
+        <nav className="sticky bottom-0 z-30 flex items-center border-t border-white/8 bg-[#0c0c0e]/98 backdrop-blur-md safe-area-bottom">
           {(
             [
               { tab: 'graph' as MobileTab, icon: Network, label: 'Graph' },

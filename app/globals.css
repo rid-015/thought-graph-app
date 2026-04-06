@@ -130,26 +130,13 @@
   }
 }
 
-/* Mobile slide-in animations */
+/* Smooth mobile animations */
 @keyframes slide-in-left {
   from {
     transform: translateX(-100%);
-    opacity: 0.8;
   }
   to {
     transform: translateX(0);
-    opacity: 1;
-  }
-}
-
-@keyframes slide-out-left {
-  from {
-    transform: translateX(0);
-    opacity: 1;
-  }
-  to {
-    transform: translateX(-100%);
-    opacity: 0.8;
   }
 }
 
@@ -158,15 +145,21 @@
   to { opacity: 1; }
 }
 
-@keyframes fade-out {
-  from { opacity: 1; }
-  to { opacity: 0; }
+@keyframes fade-up-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @keyframes scale-fade-in {
   from {
     opacity: 0;
-    transform: scale(0.96);
+    transform: scale(0.97);
   }
   to {
     opacity: 1;
@@ -174,17 +167,47 @@
   }
 }
 
+@keyframes subtle-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
 @layer utilities {
+  /* Sidebar slide - smooth spring-like curve */
   .animate-slide-in-left {
-    animation: slide-in-left 0.25s cubic-bezier(0.32, 0.72, 0, 1) forwards;
+    animation: slide-in-left 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   }
   
+  /* Backdrop fade */
   .animate-fade-in {
-    animation: fade-in 0.2s ease-out forwards;
+    animation: fade-in 0.25s ease-out forwards;
   }
   
+  /* Tab content transitions */
   .animate-scale-fade-in {
-    animation: scale-fade-in 0.2s ease-out forwards;
+    animation: scale-fade-in 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+  
+  /* Subtle upward fade for list items */
+  .animate-fade-up {
+    animation: fade-up-in 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+  
+  /* Micro interaction for buttons/cards */
+  .hover-lift {
+    transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), 
+                box-shadow 0.2s ease-out;
+  }
+  .hover-lift:hover {
+    transform: translateY(-1px);
+  }
+  .hover-lift:active {
+    transform: translateY(0);
+  }
+  
+  /* Smooth all transitions */
+  .transition-smooth {
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   }
 }
 

@@ -117,45 +117,37 @@ export function GraphCanvas() {
     })
     connectionCountRef.current = connectionCount
     
-    // Clean grid-based layout with generous spacing
+    // Organic scattered layout - evenly distributed but with natural feel
     const total = thoughts.length
     const nodes: GraphNode[] = []
     
-    // Calculate grid dimensions for even distribution
-    const padding = 80
-    const availableWidth = width - padding * 2
-    const availableHeight = height - padding * 2
+    // Use golden angle for organic spiral distribution
+    const goldenAngle = Math.PI * (3 - Math.sqrt(5))
+    const maxRadius = Math.min(width, height) * 0.42
+    const minRadius = 60
     
-    // Determine optimal grid size
-    const aspectRatio = availableWidth / availableHeight
-    let cols = Math.ceil(Math.sqrt(total * aspectRatio))
-    let rows = Math.ceil(total / cols)
-    
-    // Ensure we have enough cells
-    while (cols * rows < total) {
-      cols++
-    }
-    
-    // Calculate cell size with generous spacing
-    const cellWidth = availableWidth / cols
-    const cellHeight = availableHeight / rows
-    
-    // Sort by folder for visual grouping
-    const sorted = [...thoughts].sort((a, b) => {
-      if (a.folderId === b.folderId) return 0
-      return (a.folderId || '').localeCompare(b.folderId || '')
-    })
+    // Sort by connection count - more connected nodes closer to center
+    const sorted = [...thoughts].sort(
+      (a, b) => (connectionCount[b.id] || 0) - (connectionCount[a.id] || 0)
+    )
     
     sorted.forEach((thought, i) => {
-      const col = i % cols
-      const row = Math.floor(i / cols)
+      // Sunflower/Fermat spiral for even distribution
+      const angle = i * goldenAngle
+      // Sqrt distribution ensures even density across area
+      const radiusFactor = Math.sqrt(i / total)
+      const radius = minRadius + radiusFactor * (maxRadius - minRadius)
       
-      // Position at cell center
-      const targetX = padding + cellWidth * (col + 0.5)
-      const targetY = padding + cellHeight * (row + 0.5)
+      // Add slight organic variation (15% jitter)
+      const jitterX = (random() - 0.5) * radius * 0.15
+      const jitterY = (random() - 0.5) * radius * 0.15
+      
+      const targetX = centerX + Math.cos(angle) * radius + jitterX
+      const targetY = centerY + Math.sin(angle) * radius + jitterY
       
       const count = connectionCount[thought.id] || 0
-      const nodeSize = Math.max(3, Math.min(6, 3 + count * 0.3))
+      // Larger nodes for more connections, placed near center
+      const nodeSize = Math.max(3, Math.min(7, 3.5 + count * 0.4))
       
       nodes.push({
         id: thought.id,
