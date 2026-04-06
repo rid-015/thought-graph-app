@@ -273,27 +273,27 @@ export function ThoughtEditor() {
   return (
     <div className="flex-1 flex flex-col h-full overflow-hidden">
       {/* Header */}
-      <header className="flex items-center justify-between px-6 py-4 border-b border-white/8">
-        <div className="flex items-center gap-4">
+      <header className="flex items-center justify-between px-4 md:px-6 py-3 md:py-4 border-b border-white/8">
+        <div className="flex items-center gap-3 md:gap-4 min-w-0">
           <button
             onClick={handleBack}
-            className="group btn-icon active:scale-95 transition-all duration-150"
+            className="group btn-icon active:scale-95 transition-all duration-150 flex-shrink-0"
           >
             <ArrowLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform duration-150" />
           </button>
           
-          <div className="flex items-center gap-2 text-sm text-white/50">
+          <div className="flex items-center gap-2 text-sm text-white/50 min-w-0">
             {folder && (
               <>
                 <span
-                  className="w-2 h-2 rounded-full"
+                  className="w-2 h-2 rounded-full flex-shrink-0"
                   style={{ backgroundColor: NODE_COLORS[folder.color] }}
                 />
-                <span>{folder.name}</span>
-                <span className="text-white/20">/</span>
+                <span className="hidden sm:inline truncate">{folder.name}</span>
+                <span className="hidden sm:inline text-white/20">/</span>
               </>
             )}
-            <span className="text-white/70 truncate max-w-48">{thought.title}</span>
+            <span className="text-white/70 truncate max-w-[160px] md:max-w-48">{thought.title}</span>
           </div>
         </div>
         
@@ -330,7 +330,7 @@ export function ThoughtEditor() {
       
       {/* Editor */}
       <div className="flex-1 overflow-y-auto">
-        <div className="max-w-3xl mx-auto px-6 py-8">
+        <div className="max-w-3xl mx-auto px-4 md:px-6 py-6 md:py-8">
           {/* Title */}
           <input
             type="text"

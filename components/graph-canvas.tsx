@@ -23,11 +23,9 @@ interface GraphEdge {
   connection: Connection
 }
 
-// Physics constants - reduced for smoother feel
-const REPULSION = 300
-const ATTRACTION = 0.003
-const DAMPING = 0.92
-const CENTER_GRAVITY = 0.002
+// Animation constants
+const ANIMATION_DURATION = 2500 // Total animation time in ms
+const STAGGER_DELAY = 30 // Delay between each node appearing
 
 // Theme colors - UI-matching amber/warm palette
 const THEME_COLORS: Record<string, string> = {
@@ -119,34 +117,54 @@ export function GraphCanvas() {
     })
     connectionCountRef.current = connectionCount
     
-    // Create nodes - start from center, with staggered appear delays
-    const nodes: GraphNode[] = thoughts.map((thought, i) => {
-      // Target positions using golden angle spiral
-      const angle = i * 0.618 * Math.PI * 2
-      const radius = 80 + Math.sqrt(i) * 28
-      const jitter = random() * 20 - 10
-      const targetX = centerX + Math.cos(angle) * (radius + jitter)
-      const targetY = centerY + Math.sin(angle) * (radius + jitter)
+    // Create nodes with clean spiral layout - no physics, just smooth animation
+    // Group nodes by folder for clustering
+    const folderGroups: Record<string, typeof thoughts> = {}
+    thoughts.forEach(thought => {
+      const fid = thought.folderId || 'uncategorized'
+      if (!folderGroups[fid]) folderGroups[fid] = []
+      folderGroups[fid].push(thought)
+    })
+    
+    const folderIds = Object.keys(folderGroups)
+    const nodes: GraphNode[] = []
+    let globalIndex = 0
+    
+    // Layout each folder as a cluster
+    folderIds.forEach((folderId, folderIndex) => {
+      const folderThoughts = folderGroups[folderId]
+      const folderAngle = (folderIndex / folderIds.length) * Math.PI * 2 - Math.PI / 2
       
-      const count = connectionCount[thought.id] || 0
-      const nodeRadius = Math.max(2, Math.min(4, 2 + count * 0.15))
+      // Folder cluster center - spread folders in a ring
+      const clusterRadius = Math.min(width, height) * 0.25
+      const clusterCenterX = centerX + Math.cos(folderAngle) * clusterRadius
+      const clusterCenterY = centerY + Math.sin(folderAngle) * clusterRadius
       
-      // Stagger appearance - nodes appear one by one
-      const appearDelay = i * 15 // 15ms between each node
-      
-      return {
-        id: thought.id,
-        thought,
-        x: centerX, // Start from center
-        y: centerY,
-        targetX,
-        targetY,
-        vx: 0,
-        vy: 0,
-        radius: nodeRadius,
-        opacity: 0,
-        appearDelay,
-      }
+      folderThoughts.forEach((thought, i) => {
+        // Position nodes within cluster using a tight spiral
+        const nodeAngle = folderAngle + (i * 0.5) - (folderThoughts.length * 0.25)
+        const nodeRadius = 30 + i * 18
+        const targetX = clusterCenterX + Math.cos(nodeAngle) * Math.min(nodeRadius, 80)
+        const targetY = clusterCenterY + Math.sin(nodeAngle) * Math.min(nodeRadius, 80)
+        
+        const count = connectionCount[thought.id] || 0
+        const nodeSize = Math.max(2.5, Math.min(5, 2.5 + count * 0.2))
+        
+        nodes.push({
+          id: thought.id,
+          thought,
+          x: centerX,
+          y: centerY,
+          targetX,
+          targetY,
+          vx: 0,
+          vy: 0,
+          radius: nodeSize,
+          opacity: 0,
+          appearDelay: globalIndex * STAGGER_DELAY,
+        })
+        globalIndex++
+      })
     })
     
     nodesRef.current = nodes
@@ -206,94 +224,33 @@ export function GraphCanvas() {
         canvas.style.height = `${height}px`
       }
       
-      // Update node positions and opacity
+      // Update node positions with smooth eased animation (no physics)
       for (let i = 0; i < nodes.length; i++) {
         const node = nodes[i]
         
-        // Handle appearance animation
+        // Skip if being dragged or animation is complete
+        if (dragState.draggedNode?.id === node.id) continue
+        
         const timeSinceAppear = elapsed - node.appearDelay
-        if (timeSinceAppear > 0) {
-          // Fade in over 300ms
-          node.opacity = Math.min(1, timeSinceAppear / 300)
-          
-          // Smoothly move towards target position
-          if (timeSinceAppear < 1000) {
-            const progress = Math.min(1, timeSinceAppear / 800)
-            const ease = 1 - Math.pow(1 - progress, 3) // Ease out cubic
-            node.x = centerX + (node.targetX - centerX) * ease
-            node.y = centerY + (node.targetY - centerY) * ease
-          }
-        }
+        const animDuration = 800 // Each node takes 800ms to reach position
         
-        // Skip physics for nodes still appearing or being dragged
-        if (node.opacity < 1 || dragState.draggedNode?.id === node.id) continue
-        
-        // Gentle center gravity
-        node.vx += (centerX - node.x) * CENTER_GRAVITY
-        node.vy += (centerY - node.y) * CENTER_GRAVITY
-        
-        // Repulsion from other visible nodes
-        for (let j = i + 1; j < nodes.length; j++) {
-          const nodeB = nodes[j]
-          if (nodeB.opacity < 0.5) continue
+        if (timeSinceAppear > 0 && timeSinceAppear < animDuration) {
+          // Smooth ease-out animation to target position
+          const progress = timeSinceAppear / animDuration
           
-          const dx = nodeB.x - node.x
-          const dy = nodeB.y - node.y
-          const dist = Math.sqrt(dx * dx + dy * dy) || 1
+          // Ease out quart for smooth deceleration
+          const ease = 1 - Math.pow(1 - progress, 4)
           
-          if (dist < 150) {
-            const force = REPULSION / (dist * dist)
-            const fx = (dx / dist) * force
-            const fy = (dy / dist) * force
-            
-            node.vx -= fx
-            node.vy -= fy
-            if (dragState.draggedNode?.id !== nodeB.id && nodeB.opacity >= 1) {
-              nodeB.vx += fx
-              nodeB.vy += fy
-            }
-          }
+          node.opacity = Math.min(1, timeSinceAppear / 200)
+          node.x = centerX + (node.targetX - centerX) * ease
+          node.y = centerY + (node.targetY - centerY) * ease
+        } else if (timeSinceAppear >= animDuration && node.opacity < 1) {
+          // Ensure final state is set
+          node.opacity = 1
+          node.x = node.targetX
+          node.y = node.targetY
         }
       }
-      
-      // Edge attraction (only for fully visible nodes)
-      edges.forEach(edge => {
-        if (edge.source.opacity < 1 || edge.target.opacity < 1) return
-        
-        const dx = edge.target.x - edge.source.x
-        const dy = edge.target.y - edge.source.y
-        const dist = Math.sqrt(dx * dx + dy * dy) || 1
-        
-        const force = (dist - 50) * ATTRACTION
-        const fx = (dx / dist) * force
-        const fy = (dy / dist) * force
-        
-        if (dragState.draggedNode?.id !== edge.source.id) {
-          edge.source.vx += fx
-          edge.source.vy += fy
-        }
-        if (dragState.draggedNode?.id !== edge.target.id) {
-          edge.target.vx -= fx
-          edge.target.vy -= fy
-        }
-      })
-      
-      // Update positions
-      nodes.forEach(node => {
-        if (dragState.draggedNode?.id === node.id || node.opacity < 1) return
-        
-        node.vx *= DAMPING
-        node.vy *= DAMPING
-        node.x += node.vx
-        node.y += node.vy
-        
-        // Soft bounds
-        const margin = 60
-        if (node.x < margin) node.vx += (margin - node.x) * 0.02
-        if (node.x > width - margin) node.vx += (width - margin - node.x) * 0.02
-        if (node.y < margin) node.vy += (margin - node.y) * 0.02
-        if (node.y > height - margin) node.vy += (height - margin - node.y) * 0.02
-      })
       
       // Render
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
@@ -503,6 +460,102 @@ export function GraphCanvas() {
     setTooltip(null)
     hoverThought(null)
   }, [hoverThought])
+
+  // Touch state
+  const touchStateRef = useRef({
+    lastTouches: null as TouchList | null,
+    lastPinchDist: 0,
+  })
+
+  const getTouchPos = useCallback((touch: Touch) => {
+    const rect = canvasRef.current?.getBoundingClientRect()
+    if (!rect) return { x: 0, y: 0 }
+    const t = transformRef.current
+    return {
+      x: (touch.clientX - rect.left - t.x) / t.scale,
+      y: (touch.clientY - rect.top - t.y) / t.scale,
+    }
+  }, [])
+
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    e.preventDefault()
+    touchStateRef.current.lastTouches = e.touches
+
+    if (e.touches.length === 1) {
+      const pos = getTouchPos(e.touches[0])
+      const node = findNodeAt(pos.x, pos.y)
+      if (node) {
+        dragStateRef.current.draggedNode = node
+      } else {
+        dragStateRef.current.isDragging = true
+        dragStateRef.current.dragStart = {
+          x: e.touches[0].clientX - transformRef.current.x,
+          y: e.touches[0].clientY - transformRef.current.y,
+        }
+      }
+    } else if (e.touches.length === 2) {
+      const dx = e.touches[1].clientX - e.touches[0].clientX
+      const dy = e.touches[1].clientY - e.touches[0].clientY
+      touchStateRef.current.lastPinchDist = Math.sqrt(dx * dx + dy * dy)
+      dragStateRef.current.isDragging = false
+      dragStateRef.current.draggedNode = null
+    }
+  }, [getTouchPos, findNodeAt])
+
+  const handleTouchMove = useCallback((e: React.TouchEvent) => {
+    e.preventDefault()
+
+    if (e.touches.length === 1) {
+      const drag = dragStateRef.current
+      if (drag.draggedNode) {
+        const pos = getTouchPos(e.touches[0])
+        drag.draggedNode.x = pos.x
+        drag.draggedNode.y = pos.y
+        drag.draggedNode.vx = 0
+        drag.draggedNode.vy = 0
+      } else if (drag.isDragging) {
+        transformRef.current.x = e.touches[0].clientX - drag.dragStart.x
+        transformRef.current.y = e.touches[0].clientY - drag.dragStart.y
+      }
+    } else if (e.touches.length === 2) {
+      const dx = e.touches[1].clientX - e.touches[0].clientX
+      const dy = e.touches[1].clientY - e.touches[0].clientY
+      const dist = Math.sqrt(dx * dx + dy * dy)
+      const prevDist = touchStateRef.current.lastPinchDist
+
+      if (prevDist > 0) {
+        const rect = canvasRef.current?.getBoundingClientRect()
+        if (rect) {
+          const midX = (e.touches[0].clientX + e.touches[1].clientX) / 2 - rect.left
+          const midY = (e.touches[0].clientY + e.touches[1].clientY) / 2 - rect.top
+          const t = transformRef.current
+          const scaleChange = dist / prevDist
+          const newScale = Math.max(0.3, Math.min(3, t.scale * scaleChange))
+          const actualScale = newScale / t.scale
+          transformRef.current = {
+            x: midX - (midX - t.x) * actualScale,
+            y: midY - (midY - t.y) * actualScale,
+            scale: newScale,
+          }
+        }
+      }
+      touchStateRef.current.lastPinchDist = dist
+    }
+  }, [getTouchPos])
+
+  const handleTouchEnd = useCallback((e: React.TouchEvent) => {
+    if (e.changedTouches.length === 1 && e.touches.length === 0) {
+      const drag = dragStateRef.current
+      if (!drag.isDragging && !drag.draggedNode) {
+        const pos = getTouchPos(e.changedTouches[0])
+        const node = findNodeAt(pos.x, pos.y)
+        if (node) selectThought(node.id)
+      }
+    }
+    dragStateRef.current.isDragging = false
+    dragStateRef.current.draggedNode = null
+    touchStateRef.current.lastPinchDist = 0
+  }, [getTouchPos, findNodeAt, selectThought])
   
   const handleZoom = useCallback((direction: 'in' | 'out') => {
     const container = containerRef.current
@@ -528,13 +581,16 @@ export function GraphCanvas() {
     <div ref={containerRef} className="w-full h-full relative overflow-hidden">
       <canvas
         ref={canvasRef}
-        className="absolute inset-0 cursor-grab active:cursor-grabbing"
+        className="absolute inset-0 cursor-grab active:cursor-grabbing touch-none"
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseLeave}
         onClick={handleClick}
         onWheel={handleWheel}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
       />
       
       {/* Tooltip overlay - techy HUD style */}
@@ -615,8 +671,11 @@ export function GraphCanvas() {
       </div>
       
       {/* Controls hint */}
-      <div className="absolute bottom-4 left-4 text-[10px] text-white/30">
+      <div className="absolute bottom-4 left-4 text-[10px] text-white/30 hidden md:block">
         Drag to pan · Scroll to zoom · Click node to view
+      </div>
+      <div className="absolute bottom-4 left-4 text-[10px] text-white/30 md:hidden">
+        Drag to pan · Pinch to zoom · Tap node to view
       </div>
     </div>
   )

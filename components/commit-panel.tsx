@@ -72,7 +72,7 @@ export function CommitPanel() {
   }
   
   return (
-    <aside className="w-72 h-full flex flex-col glass-subtle border-l border-white/6">
+    <aside className="w-full md:w-72 h-full flex flex-col glass-subtle md:border-l border-white/6">
       {/* Header */}
       <div className="p-4 border-b border-white/6">
         <div className="flex items-center gap-2">
