@@ -477,6 +477,9 @@ export function GraphCanvas() {
     }
   }, [])
 
+  // Track tap for showing tooltip on mobile
+  const tapStartRef = useRef<{ x: number; y: number; time: number } | null>(null)
+
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
     e.preventDefault()
     touchStateRef.current.lastTouches = e.touches
@@ -484,6 +487,14 @@ export function GraphCanvas() {
     if (e.touches.length === 1) {
       const pos = getTouchPos(e.touches[0])
       const node = findNodeAt(pos.x, pos.y)
+      
+      // Track tap start position and time
+      tapStartRef.current = {
+        x: e.touches[0].clientX,
+        y: e.touches[0].clientY,
+        time: Date.now(),
+      }
+      
       if (node) {
         dragStateRef.current.draggedNode = node
       } else {
@@ -499,6 +510,7 @@ export function GraphCanvas() {
       touchStateRef.current.lastPinchDist = Math.sqrt(dx * dx + dy * dy)
       dragStateRef.current.isDragging = false
       dragStateRef.current.draggedNode = null
+      tapStartRef.current = null
     }
   }, [getTouchPos, findNodeAt])
 
@@ -545,17 +557,62 @@ export function GraphCanvas() {
 
   const handleTouchEnd = useCallback((e: React.TouchEvent) => {
     if (e.changedTouches.length === 1 && e.touches.length === 0) {
+      const touch = e.changedTouches[0]
+      const tapStart = tapStartRef.current
       const drag = dragStateRef.current
-      if (!drag.isDragging && !drag.draggedNode) {
-        const pos = getTouchPos(e.changedTouches[0])
+      
+      // Check if this was a tap (short duration, minimal movement)
+      const isTap = tapStart && 
+        Date.now() - tapStart.time < 300 &&
+        Math.abs(touch.clientX - tapStart.x) < 10 &&
+        Math.abs(touch.clientY - tapStart.y) < 10
+      
+      if (isTap) {
+        const pos = getTouchPos(touch)
         const node = findNodeAt(pos.x, pos.y)
-        if (node) selectThought(node.id)
+        
+        if (node) {
+          // Show tooltip on first tap, navigate on second tap
+          const folder = folders.find(f => f.id === node.thought.folderId)
+          const connections = connectionCountRef.current[node.id] || 0
+          const rect = canvasRef.current?.getBoundingClientRect()
+          
+          if (rect) {
+            const t = transformRef.current
+            const screenX = node.x * t.scale + t.x
+            const screenY = node.y * t.scale + t.y
+            
+            // If tooltip is already showing for this node, navigate to it
+            if (tooltip?.title === node.thought.title) {
+              selectThought(node.id)
+              setTooltip(null)
+            } else {
+              // Show tooltip
+              setTooltip({
+                x: screenX,
+                y: screenY,
+                title: node.thought.title,
+                folder: folder?.name || 'Uncategorized',
+                connections,
+              })
+              hoverThought(node.id)
+            }
+          }
+        } else {
+          // Tapped on empty space - hide tooltip
+          setTooltip(null)
+          hoverThought(null)
+        }
+      } else if (!drag.isDragging && drag.draggedNode) {
+        // Was dragging a node - just release it
       }
     }
+    
     dragStateRef.current.isDragging = false
     dragStateRef.current.draggedNode = null
     touchStateRef.current.lastPinchDist = 0
-  }, [getTouchPos, findNodeAt, selectThought])
+    tapStartRef.current = null
+  }, [getTouchPos, findNodeAt, selectThought, folders, tooltip, hoverThought])
   
   const handleZoom = useCallback((direction: 'in' | 'out') => {
     const container = containerRef.current

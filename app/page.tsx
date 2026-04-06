@@ -5,6 +5,7 @@ import { Sidebar } from '@/components/sidebar'
 import { GraphCanvas } from '@/components/graph-canvas'
 import { CommitPanel } from '@/components/commit-panel'
 import { ThoughtEditor } from '@/components/thought-editor'
+import { SplashScreen } from '@/components/splash-screen'
 import { useStore } from '@/lib/store'
 import { Network, BookOpen, GitCommit, List } from 'lucide-react'
 
@@ -14,9 +15,12 @@ export default function NodusGraphApp() {
   const viewMode = useStore(s => s.viewMode)
   const [mobileTab, setMobileTab] = useState<MobileTab>('graph')
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
+  const [showSplash, setShowSplash] = useState(true)
 
   return (
     <div className="h-screen w-screen flex overflow-hidden bg-[#0c0c0e]">
+      {/* Splash screen */}
+      {showSplash && <SplashScreen onComplete={() => setShowSplash(false)} />}
 
       {/* ── DESKTOP LAYOUT (md+) ── */}
       <div className="hidden md:flex w-full h-full">
