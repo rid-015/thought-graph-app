@@ -24,31 +24,15 @@ interface GraphEdge {
 }
 
 // Animation constants
-const ANIMATION_DURATION = 2500 // Total animation time in ms
-const STAGGER_DELAY = 30 // Delay between each node appearing
+const ANIMATION_DURATION = 2500
+const STAGGER_DELAY = 25
 
-// Theme colors - UI-matching amber/warm palette
-const THEME_COLORS: Record<string, string> = {
-  amber: '#f59e0b',
-  orange: '#f97316',
-  rose: '#fb7185', 
-  violet: '#a78bfa',
-  blue: '#60a5fa',
-  emerald: '#34d399',
-  slate: '#94a3b8',
-}
-
-// Edge colors - grey lines
-const EDGE_COLOR = 'rgba(255, 255, 255, 0.12)'
-const EDGE_HOVER_COLOR = 'rgba(255, 255, 255, 0.4)'
+// Visual constants - clean minimal style like splash screen
 const BG_COLOR = '#0c0c0e'
-
-function hexToRgba(hex: string, alpha: number): string {
-  const r = parseInt(hex.slice(1, 3), 16)
-  const g = parseInt(hex.slice(3, 5), 16)
-  const b = parseInt(hex.slice(5, 7), 16)
-  return `rgba(${r}, ${g}, ${b}, ${alpha})`
-}
+const EDGE_ALPHA = 0.10
+const EDGE_HIGHLIGHT_ALPHA = 0.30
+const NODE_FILL_ALPHA = 0.35
+const NODE_ACTIVE_ALPHA = 0.6
 
 // Seeded random for consistent initial positions
 function seededRandom(seed: number) {
@@ -117,73 +101,78 @@ export function GraphCanvas() {
     })
     connectionCountRef.current = connectionCount
     
-    // Create nodes with clean spiral layout - no physics, just smooth animation
-    // Group nodes by folder for clustering
-    const folderGroups: Record<string, typeof thoughts> = {}
-    thoughts.forEach(thought => {
-      const fid = thought.folderId || 'uncategorized'
-      if (!folderGroups[fid]) folderGroups[fid] = []
-      folderGroups[fid].push(thought)
-    })
-    
-    const folderIds = Object.keys(folderGroups)
+    // Clean grid layout like splash screen
+    const total = thoughts.length
     const nodes: GraphNode[] = []
-    let globalIndex = 0
     
-    // Layout each folder as a cluster
-    folderIds.forEach((folderId, folderIndex) => {
-      const folderThoughts = folderGroups[folderId]
-      const folderAngle = (folderIndex / folderIds.length) * Math.PI * 2 - Math.PI / 2
+    // Calculate grid dimensions
+    const cols = Math.ceil(Math.sqrt(total))
+    const rows = Math.ceil(total / cols)
+    const spacing = 100 // Clean even spacing like splash screen
+    
+    // Center the grid
+    const gridWidth = (cols - 1) * spacing
+    const gridHeight = (rows - 1) * spacing
+    const startX = centerX - gridWidth / 2
+    const startY = centerY - gridHeight / 2
+    
+    thoughts.forEach((thought, i) => {
+      const row = Math.floor(i / cols)
+      const col = i % cols
       
-      // Folder cluster center - spread folders in a ring
-      const clusterRadius = Math.min(width, height) * 0.25
-      const clusterCenterX = centerX + Math.cos(folderAngle) * clusterRadius
-      const clusterCenterY = centerY + Math.sin(folderAngle) * clusterRadius
+      const targetX = startX + col * spacing
+      const targetY = startY + row * spacing
       
-      folderThoughts.forEach((thought, i) => {
-        // Position nodes within cluster using a tight spiral
-        const nodeAngle = folderAngle + (i * 0.5) - (folderThoughts.length * 0.25)
-        const nodeRadius = 30 + i * 18
-        const targetX = clusterCenterX + Math.cos(nodeAngle) * Math.min(nodeRadius, 80)
-        const targetY = clusterCenterY + Math.sin(nodeAngle) * Math.min(nodeRadius, 80)
-        
-        const count = connectionCount[thought.id] || 0
-        const nodeSize = Math.max(2.5, Math.min(5, 2.5 + count * 0.2))
-        
-        nodes.push({
-          id: thought.id,
-          thought,
-          x: centerX,
-          y: centerY,
-          targetX,
-          targetY,
-          vx: 0,
-          vy: 0,
-          radius: nodeSize,
-          opacity: 0,
-          appearDelay: globalIndex * STAGGER_DELAY,
-        })
-        globalIndex++
+      // Simple sizing: slightly larger for center nodes, consistent otherwise
+      const isCenterish = Math.abs(col - cols/2) < 1.5 && Math.abs(row - rows/2) < 1.5
+      const nodeSize = isCenterish ? 5 : 4
+      
+      nodes.push({
+        id: thought.id,
+        thought,
+        x: centerX,
+        y: centerY,
+        targetX,
+        targetY,
+        vx: 0, vy: 0,
+        radius: nodeSize,
+        opacity: 0,
+        appearDelay: i * STAGGER_DELAY,
       })
     })
     
     nodesRef.current = nodes
     
-    // Create edges
-    const nodeMap = new Map(nodes.map(n => [n.id, n]))
-    const edges: GraphEdge[] = connections
-      .map(conn => {
-        const source = nodeMap.get(conn.source)
-        const target = nodeMap.get(conn.target)
-        if (source && target) {
-          return { source, target, connection: conn }
-        }
-        return null
-      })
-      .filter((e): e is GraphEdge => e !== null)
+    // Create edges - only connect adjacent nodes in grid (horizontal + vertical)
+    const edges: GraphEdge[] = []
+    
+    nodes.forEach((node, i) => {
+      const row = Math.floor(i / cols)
+      const col = i % cols
+      
+      // Right neighbor
+      const rightIdx = i + 1
+      if (col < cols - 1 && rightIdx < nodes.length) {
+        edges.push({ 
+          source: node, 
+          target: nodes[rightIdx], 
+          connection: { id: `grid-${i}-right`, source: node.id, target: nodes[rightIdx].id } 
+        })
+      }
+      
+      // Bottom neighbor
+      const bottomIdx = i + cols
+      if (bottomIdx < nodes.length) {
+        edges.push({ 
+          source: node, 
+          target: nodes[bottomIdx], 
+          connection: { id: `grid-${i}-bottom`, source: node.id, target: nodes[bottomIdx].id } 
+        })
+      }
+    })
     
     edgesRef.current = edges
-  }, [thoughts, connections])
+  }, [thoughts])
   
   // Animation loop
   useEffect(() => {
@@ -252,7 +241,7 @@ export function GraphCanvas() {
         }
       }
       
-      // Render
+      // Render - clean minimal style like splash screen
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
       ctx.fillStyle = BG_COLOR
       ctx.fillRect(0, 0, width, height)
@@ -261,7 +250,7 @@ export function GraphCanvas() {
       ctx.translate(transform.x, transform.y)
       ctx.scale(transform.scale, transform.scale)
       
-      // Get highlighted nodes
+      // Get highlighted nodes for interaction
       const connectedToHovered = new Set<string>()
       const connectedToSelected = new Set<string>()
       
@@ -283,7 +272,7 @@ export function GraphCanvas() {
       
       const hasHighlight = hoveredId || selectedId
       
-      // Draw edges - visible connecting lines
+      // Draw edges - simple straight lines like splash screen
       edges.forEach(edge => {
         const minOpacity = Math.min(edge.source.opacity, edge.target.opacity)
         if (minOpacity < 0.1) return
@@ -296,14 +285,14 @@ export function GraphCanvas() {
         ctx.beginPath()
         ctx.moveTo(edge.source.x, edge.source.y)
         ctx.lineTo(edge.target.x, edge.target.y)
-        ctx.strokeStyle = isHighlighted ? EDGE_HOVER_COLOR : hasHighlight ? 'rgba(255, 255, 255, 0.04)' : EDGE_COLOR
-        ctx.lineWidth = isHighlighted ? 1 : 0.5
+        ctx.strokeStyle = `rgba(255, 255, 255, ${isHighlighted ? EDGE_HIGHLIGHT_ALPHA : hasHighlight ? 0.03 : EDGE_ALPHA})`
+        ctx.lineWidth = 1
         ctx.stroke()
       })
       
       ctx.globalAlpha = 1
       
-      // Draw nodes - small circles, stroke by default, fill on hover
+      // Draw nodes - simple filled circles like splash screen
       nodes.forEach(node => {
         if (node.opacity < 0.05) return
         
@@ -313,24 +302,22 @@ export function GraphCanvas() {
         const isDimmed = hasHighlight && !isConnected
         const isActive = isHovered || isSelected
         
-        const themeColor = THEME_COLORS[node.thought.color] || THEME_COLORS.slate
-        const radius = node.radius * (isActive ? 2 : 1.2)
+        // Simple sizing
+        let radius = node.radius
+        if (isActive) radius = node.radius * 1.8
+        else if (isConnected) radius = node.radius * 1.3
         
         ctx.globalAlpha = node.opacity
-        
         ctx.beginPath()
         ctx.arc(node.x, node.y, radius, 0, Math.PI * 2)
         
+        // Simple fill - white/amber like splash screen
         if (isActive) {
-          // Fill on hover/select
-          ctx.fillStyle = hexToRgba(themeColor, 0.9)
-          ctx.fill()
+          ctx.fillStyle = `rgba(245, 158, 11, ${NODE_ACTIVE_ALPHA})` // Amber for active
         } else {
-          // Stroke only by default
-          ctx.strokeStyle = isDimmed ? hexToRgba(themeColor, 0.15) : hexToRgba(themeColor, 0.7)
-          ctx.lineWidth = 1
-          ctx.stroke()
+          ctx.fillStyle = `rgba(255, 255, 255, ${isDimmed ? 0.12 : NODE_FILL_ALPHA})`
         }
+        ctx.fill()
       })
       
       ctx.globalAlpha = 1
@@ -477,6 +464,9 @@ export function GraphCanvas() {
     }
   }, [])
 
+  // Track tap for showing tooltip on mobile
+  const tapStartRef = useRef<{ x: number; y: number; time: number } | null>(null)
+
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
     e.preventDefault()
     touchStateRef.current.lastTouches = e.touches
@@ -484,6 +474,14 @@ export function GraphCanvas() {
     if (e.touches.length === 1) {
       const pos = getTouchPos(e.touches[0])
       const node = findNodeAt(pos.x, pos.y)
+      
+      // Track tap start position and time
+      tapStartRef.current = {
+        x: e.touches[0].clientX,
+        y: e.touches[0].clientY,
+        time: Date.now(),
+      }
+      
       if (node) {
         dragStateRef.current.draggedNode = node
       } else {
@@ -499,6 +497,7 @@ export function GraphCanvas() {
       touchStateRef.current.lastPinchDist = Math.sqrt(dx * dx + dy * dy)
       dragStateRef.current.isDragging = false
       dragStateRef.current.draggedNode = null
+      tapStartRef.current = null
     }
   }, [getTouchPos, findNodeAt])
 
@@ -545,17 +544,62 @@ export function GraphCanvas() {
 
   const handleTouchEnd = useCallback((e: React.TouchEvent) => {
     if (e.changedTouches.length === 1 && e.touches.length === 0) {
+      const touch = e.changedTouches[0]
+      const tapStart = tapStartRef.current
       const drag = dragStateRef.current
-      if (!drag.isDragging && !drag.draggedNode) {
-        const pos = getTouchPos(e.changedTouches[0])
+      
+      // Check if this was a tap (short duration, minimal movement)
+      const isTap = tapStart && 
+        Date.now() - tapStart.time < 300 &&
+        Math.abs(touch.clientX - tapStart.x) < 10 &&
+        Math.abs(touch.clientY - tapStart.y) < 10
+      
+      if (isTap) {
+        const pos = getTouchPos(touch)
         const node = findNodeAt(pos.x, pos.y)
-        if (node) selectThought(node.id)
+        
+        if (node) {
+          // Show tooltip on first tap, navigate on second tap
+          const folder = folders.find(f => f.id === node.thought.folderId)
+          const connections = connectionCountRef.current[node.id] || 0
+          const rect = canvasRef.current?.getBoundingClientRect()
+          
+          if (rect) {
+            const t = transformRef.current
+            const screenX = node.x * t.scale + t.x
+            const screenY = node.y * t.scale + t.y
+            
+            // If tooltip is already showing for this node, navigate to it
+            if (tooltip?.title === node.thought.title) {
+              selectThought(node.id)
+              setTooltip(null)
+            } else {
+              // Show tooltip
+              setTooltip({
+                x: screenX,
+                y: screenY,
+                title: node.thought.title,
+                folder: folder?.name || 'Uncategorized',
+                connections,
+              })
+              hoverThought(node.id)
+            }
+          }
+        } else {
+          // Tapped on empty space - hide tooltip
+          setTooltip(null)
+          hoverThought(null)
+        }
+      } else if (!drag.isDragging && drag.draggedNode) {
+        // Was dragging a node - just release it
       }
     }
+    
     dragStateRef.current.isDragging = false
     dragStateRef.current.draggedNode = null
     touchStateRef.current.lastPinchDist = 0
-  }, [getTouchPos, findNodeAt, selectThought])
+    tapStartRef.current = null
+  }, [getTouchPos, findNodeAt, selectThought, folders, tooltip, hoverThought])
   
   const handleZoom = useCallback((direction: 'in' | 'out') => {
     const container = containerRef.current

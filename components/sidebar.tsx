@@ -98,7 +98,7 @@ export function Sidebar({ onClose }: SidebarProps) {
           </div>
           <button
             onClick={() => { setViewMode('graph'); selectThought(null); onClose?.() }}
-            className={`w-8 h-8 flex items-center justify-center transition-all duration-150 hover:bg-white/5 active:scale-95 ${viewMode === 'graph' ? 'text-amber-400 bg-amber-500/10' : 'text-white/40'}`}
+            className={`w-8 h-8 flex items-center justify-center transition-smooth hover:bg-white/5 active:scale-95 ${viewMode === 'graph' ? 'text-amber-400 bg-amber-500/10' : 'text-white/40'}`}
             title="Graph View"
           >
             <Network className="w-4 h-4" />
