@@ -59,25 +59,31 @@ export default function NodusGraphApp() {
 
         {/* Mobile main content */}
         <main className="flex-1 relative overflow-hidden">
-          {mobileTab === 'graph' && <GraphCanvas />}
+          {mobileTab === 'graph' && (
+            <div className="h-full animate-scale-fade-in">
+              <GraphCanvas />
+            </div>
+          )}
           {mobileTab === 'notes' && (
-            viewMode === 'editor' ? <ThoughtEditor /> : (
-              <div className="flex-1 flex items-center justify-center h-full">
-                <div className="text-center px-6">
-                  <BookOpen className="w-10 h-10 text-white/20 mx-auto mb-3" />
-                  <p className="text-white/40 text-sm mb-4">Select a thought to read or edit it</p>
-                  <button
-                    onClick={() => setMobileSidebarOpen(true)}
-                    className="btn-primary text-sm px-4 py-2"
-                  >
-                    Browse Thoughts
-                  </button>
+            <div className="h-full animate-scale-fade-in">
+              {viewMode === 'editor' ? <ThoughtEditor /> : (
+                <div className="flex-1 flex items-center justify-center h-full">
+                  <div className="text-center px-6">
+                    <BookOpen className="w-10 h-10 text-white/20 mx-auto mb-3" />
+                    <p className="text-white/40 text-sm mb-4">Select a thought to read or edit it</p>
+                    <button
+                      onClick={() => setMobileSidebarOpen(true)}
+                      className="btn-primary text-sm px-4 py-2"
+                    >
+                      Browse Thoughts
+                    </button>
+                  </div>
                 </div>
-              </div>
-            )
+              )}
+            </div>
           )}
           {mobileTab === 'activity' && (
-            <div className="h-full overflow-y-auto">
+            <div className="h-full overflow-y-auto animate-scale-fade-in">
               <CommitPanel />
             </div>
           )}
@@ -116,11 +122,11 @@ export default function NodusGraphApp() {
         <div className="fixed inset-0 z-50 md:hidden">
           {/* Backdrop */}
           <div
-            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-fade-in"
             onClick={() => setMobileSidebarOpen(false)}
           />
           {/* Drawer */}
-          <div className="absolute left-0 top-0 bottom-0 w-72 max-w-[85vw] z-10">
+          <div className="absolute left-0 top-0 bottom-0 w-72 max-w-[85vw] z-10 animate-slide-in-left">
             <Sidebar onClose={() => {
               setMobileSidebarOpen(false)
               setMobileTab('notes')

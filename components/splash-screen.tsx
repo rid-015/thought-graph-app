@@ -22,33 +22,28 @@ export function SplashScreen({ onComplete }: SplashScreenProps) {
     return () => timers.forEach(clearTimeout)
   }, [onComplete])
 
-  // Bold hub-and-spoke graph — 4 hubs in inner ring, 9 satellites in outer ring
-  const hubAngles = [0, 1, 2, 3].map(i => (i / 4) * Math.PI * 2 - Math.PI / 2)
-  const innerR = 62
-  const outerR = 118
-
+  // Clean 3x3 grid of evenly spaced nodes
+  const spacing = 70
   const graphNodes = [
-    // 4 hub nodes (inner ring)
-    ...hubAngles.map((a, i) => ({
-      x: Math.cos(a) * innerR,
-      y: Math.sin(a) * innerR,
-      r: 5,
-      delay: i * 0.08,
-    })),
-    // 9 satellite nodes (outer ring, offset between hubs)
-    ...[0,1,2,3,4,5,6,7,8].map(i => {
-      const a = (i / 9) * Math.PI * 2 - Math.PI / 2 + (Math.PI / 9)
-      const r = outerR + (i % 3 === 0 ? 14 : i % 3 === 1 ? -14 : 0)
-      return { x: Math.cos(a) * r, y: Math.sin(a) * r, r: 2.5, delay: 0.32 + i * 0.05 }
-    }),
+    { x: -spacing, y: -spacing, r: 4, delay: 0 },
+    { x: 0, y: -spacing, r: 3, delay: 0.05 },
+    { x: spacing, y: -spacing, r: 4, delay: 0.1 },
+    { x: -spacing, y: 0, r: 3, delay: 0.15 },
+    { x: 0, y: 0, r: 5, delay: 0.2 },  // Center node slightly larger
+    { x: spacing, y: 0, r: 3, delay: 0.25 },
+    { x: -spacing, y: spacing, r: 4, delay: 0.3 },
+    { x: 0, y: spacing, r: 3, delay: 0.35 },
+    { x: spacing, y: spacing, r: 4, delay: 0.4 },
   ]
 
-  // Connections: each satellite connects to its nearest hub + one cross-hub link
+  // Simple connections - only adjacent nodes
   const connections: [number, number][] = [
-    // Hub ring
-    [0,1],[1,2],[2,3],[3,0],[0,2],
-    // Satellites to nearest hub
-    [4,0],[4,1],[5,1],[5,2],[6,2],[6,3],[7,3],[7,0],[8,0],[9,1],[10,2],[11,3],[12,0],
+    [0,1], [1,2],           // Top row
+    [3,4], [4,5],           // Middle row  
+    [6,7], [7,8],           // Bottom row
+    [0,3], [3,6],           // Left column
+    [1,4], [4,7],           // Center column
+    [2,5], [5,8],           // Right column
   ]
 
   return (
@@ -88,7 +83,7 @@ export function SplashScreen({ onComplete }: SplashScreenProps) {
                 cx={`calc(50% + ${node.x}px)`}
                 cy={`calc(50% + ${node.y}px)`}
                 r={node.r}
-                fill={i < 4 ? 'rgba(245,158,11,0.7)' : 'rgba(255,255,255,0.4)'}
+                fill={i === 4 ? 'rgba(245,158,11,0.6)' : 'rgba(255,255,255,0.35)'}
                 style={{
                   animation: `splash-dot-appear 0.4s ease-out ${node.delay}s both`,
                 }}

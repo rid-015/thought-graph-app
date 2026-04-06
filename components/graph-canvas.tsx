@@ -117,55 +117,57 @@ export function GraphCanvas() {
     })
     connectionCountRef.current = connectionCount
     
-    // Bold radial hub-and-spoke layout
-    // Sort thoughts by connection count descending — most connected = hubs
-    const sorted = [...thoughts].sort(
-      (a, b) => (connectionCount[b.id] || 0) - (connectionCount[a.id] || 0)
-    )
-
-    const total = sorted.length
-    // Number of hub nodes placed in the first ring
-    const hubCount = Math.min(6, Math.max(3, Math.floor(total * 0.25)))
+    // Clean grid-based layout with generous spacing
+    const total = thoughts.length
     const nodes: GraphNode[] = []
-
-    // Place hub nodes in a wide first ring
-    const hubRingRadius = Math.min(width, height) * 0.28
-    sorted.slice(0, hubCount).forEach((thought, i) => {
-      const angle = (i / hubCount) * Math.PI * 2 - Math.PI / 2
+    
+    // Calculate grid dimensions for even distribution
+    const padding = 80
+    const availableWidth = width - padding * 2
+    const availableHeight = height - padding * 2
+    
+    // Determine optimal grid size
+    const aspectRatio = availableWidth / availableHeight
+    let cols = Math.ceil(Math.sqrt(total * aspectRatio))
+    let rows = Math.ceil(total / cols)
+    
+    // Ensure we have enough cells
+    while (cols * rows < total) {
+      cols++
+    }
+    
+    // Calculate cell size with generous spacing
+    const cellWidth = availableWidth / cols
+    const cellHeight = availableHeight / rows
+    
+    // Sort by folder for visual grouping
+    const sorted = [...thoughts].sort((a, b) => {
+      if (a.folderId === b.folderId) return 0
+      return (a.folderId || '').localeCompare(b.folderId || '')
+    })
+    
+    sorted.forEach((thought, i) => {
+      const col = i % cols
+      const row = Math.floor(i / cols)
+      
+      // Position at cell center
+      const targetX = padding + cellWidth * (col + 0.5)
+      const targetY = padding + cellHeight * (row + 0.5)
+      
       const count = connectionCount[thought.id] || 0
+      const nodeSize = Math.max(3, Math.min(6, 3 + count * 0.3))
+      
       nodes.push({
         id: thought.id,
         thought,
         x: centerX,
         y: centerY,
-        targetX: centerX + Math.cos(angle) * hubRingRadius,
-        targetY: centerY + Math.sin(angle) * hubRingRadius,
+        targetX,
+        targetY,
         vx: 0, vy: 0,
-        radius: Math.max(4, Math.min(7, 3.5 + count * 0.35)),
+        radius: nodeSize,
         opacity: 0,
         appearDelay: i * STAGGER_DELAY,
-      })
-    })
-
-    // Place remaining nodes in an outer ring, each anchored near its closest hub
-    const outerRingRadius = Math.min(width, height) * 0.44
-    const outerNodes = sorted.slice(hubCount)
-    outerNodes.forEach((thought, i) => {
-      const angle = (i / outerNodes.length) * Math.PI * 2 - Math.PI / 2 + (Math.PI / outerNodes.length)
-      // Alternate radius slightly to avoid grid feel
-      const r = outerRingRadius + (i % 3 === 0 ? 18 : i % 3 === 1 ? -18 : 0)
-      const count = connectionCount[thought.id] || 0
-      nodes.push({
-        id: thought.id,
-        thought,
-        x: centerX,
-        y: centerY,
-        targetX: centerX + Math.cos(angle) * r,
-        targetY: centerY + Math.sin(angle) * r,
-        vx: 0, vy: 0,
-        radius: Math.max(2.5, Math.min(4.5, 2.5 + count * 0.2)),
-        opacity: 0,
-        appearDelay: (hubCount + i) * STAGGER_DELAY,
       })
     })
     
