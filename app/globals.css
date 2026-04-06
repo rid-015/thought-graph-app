@@ -123,6 +123,13 @@
   background: rgba(255, 255, 255, 0.20);
 }
 
+/* Mobile safe areas for notch/home indicator */
+@layer utilities {
+  .safe-area-bottom {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+}
+
 /* Glassmorphism utilities */
 @layer utilities {
   .glass {

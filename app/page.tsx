@@ -84,7 +84,7 @@ export default function NodusGraphApp() {
         </main>
 
         {/* Mobile bottom nav */}
-        <nav className="flex-shrink-0 flex items-center border-t border-white/8 bg-[#0c0c0e]/95 backdrop-blur-sm">
+        <nav className="flex-shrink-0 flex items-center border-t border-white/8 bg-[#0c0c0e]/95 backdrop-blur-sm safe-area-bottom">
           {(
             [
               { tab: 'graph' as MobileTab, icon: Network, label: 'Graph' },
@@ -95,16 +95,16 @@ export default function NodusGraphApp() {
             <button
               key={tab}
               onClick={() => setMobileTab(tab)}
-              className={`flex-1 flex flex-col items-center gap-1 py-3 text-[11px] transition-all duration-150 active:scale-95 ${
+              className={`relative flex-1 flex flex-col items-center gap-1 py-3 pb-4 text-[11px] transition-all duration-150 active:scale-95 ${
                 mobileTab === tab
                   ? 'text-amber-400'
-                  : 'text-white/40 hover:text-white/60'
+                  : 'text-white/40'
               }`}
             >
               <Icon className={`w-5 h-5 ${mobileTab === tab ? 'opacity-100' : 'opacity-60'}`} />
               <span>{label}</span>
               {mobileTab === tab && (
-                <span className="absolute bottom-0 w-8 h-px bg-amber-500/60" />
+                <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-8 h-0.5 bg-amber-500/60 rounded-full" />
               )}
             </button>
           ))}

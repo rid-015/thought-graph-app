@@ -201,22 +201,41 @@ export function CommitPanel() {
       {/* Stats footer */}
       <div className="p-4 border-t border-white/6">
         <div className="grid grid-cols-3 gap-2 text-center">
-          <div className="bg-white/3 rounded-sm py-2.5 hover:bg-white/5 transition-colors duration-150">
+          <button 
+            onClick={() => {
+              const firstThought = thoughts[0]
+              if (firstThought) selectThought(firstThought.id)
+            }}
+            className="bg-white/3 rounded-sm py-2.5 hover:bg-white/5 transition-colors duration-150 cursor-pointer"
+          >
             <div className="text-sm font-medium text-white/90">{thoughts.length}</div>
             <div className="text-[9px] text-white/40">Thoughts</div>
-          </div>
-          <div className="bg-white/3 rounded-sm py-2.5 hover:bg-white/5 transition-colors duration-150">
+          </button>
+          <button 
+            onClick={() => {
+              // Scroll to top of commits list
+              const commitList = document.querySelector('aside .overflow-y-auto')
+              if (commitList) commitList.scrollTo({ top: 0, behavior: 'smooth' })
+            }}
+            className="bg-white/3 rounded-sm py-2.5 hover:bg-white/5 transition-colors duration-150 cursor-pointer"
+          >
             <div className="text-sm font-medium text-white/90">{commits.length}</div>
             <div className="text-[9px] text-white/40">Commits</div>
-          </div>
-          <div className="group relative bg-amber-500/10 rounded-sm py-2.5 hover:bg-amber-500/15 transition-colors duration-150">
+          </button>
+          <button 
+            onClick={() => {
+              const starredThought = thoughts.find(t => t.starred)
+              if (starredThought) selectThought(starredThought.id)
+            }}
+            className="group relative bg-amber-500/10 rounded-sm py-2.5 hover:bg-amber-500/15 transition-colors duration-150 cursor-pointer"
+          >
             <span className="absolute -top-px -left-px w-1.5 h-px bg-amber-500/50 group-hover:w-2.5 transition-all duration-200" />
             <span className="absolute -top-px -left-px w-px h-1.5 bg-amber-500/50 group-hover:h-2.5 transition-all duration-200" />
             <div className="text-sm font-medium text-amber-400">
               {thoughts.filter(t => t.starred).length}
             </div>
             <div className="text-[9px] text-white/40">Starred</div>
-          </div>
+          </button>
         </div>
       </div>
     </aside>
