@@ -23,12 +23,9 @@ interface GraphEdge {
   connection: Connection
 }
 
-// Physics constants - reduced for smoother feel
-const REPULSION = 300
-const ATTRACTION = 0.003
-const DAMPING = 0.92
-const CENTER_GRAVITY = 0.002
-const PHYSICS_DURATION = 3500 // Stop physics simulation after 3.5 seconds
+// Animation constants
+const ANIMATION_DURATION = 2500 // Total animation time in ms
+const STAGGER_DELAY = 30 // Delay between each node appearing
 
 // Theme colors - UI-matching amber/warm palette
 const THEME_COLORS: Record<string, string> = {
@@ -120,34 +117,54 @@ export function GraphCanvas() {
     })
     connectionCountRef.current = connectionCount
     
-    // Create nodes - start from center, with staggered appear delays
-    const nodes: GraphNode[] = thoughts.map((thought, i) => {
-      // Target positions using golden angle spiral
-      const angle = i * 0.618 * Math.PI * 2
-      const radius = 80 + Math.sqrt(i) * 28
-      const jitter = random() * 20 - 10
-      const targetX = centerX + Math.cos(angle) * (radius + jitter)
-      const targetY = centerY + Math.sin(angle) * (radius + jitter)
+    // Create nodes with clean spiral layout - no physics, just smooth animation
+    // Group nodes by folder for clustering
+    const folderGroups: Record<string, typeof thoughts> = {}
+    thoughts.forEach(thought => {
+      const fid = thought.folderId || 'uncategorized'
+      if (!folderGroups[fid]) folderGroups[fid] = []
+      folderGroups[fid].push(thought)
+    })
+    
+    const folderIds = Object.keys(folderGroups)
+    const nodes: GraphNode[] = []
+    let globalIndex = 0
+    
+    // Layout each folder as a cluster
+    folderIds.forEach((folderId, folderIndex) => {
+      const folderThoughts = folderGroups[folderId]
+      const folderAngle = (folderIndex / folderIds.length) * Math.PI * 2 - Math.PI / 2
       
-      const count = connectionCount[thought.id] || 0
-      const nodeRadius = Math.max(2, Math.min(4, 2 + count * 0.15))
+      // Folder cluster center - spread folders in a ring
+      const clusterRadius = Math.min(width, height) * 0.25
+      const clusterCenterX = centerX + Math.cos(folderAngle) * clusterRadius
+      const clusterCenterY = centerY + Math.sin(folderAngle) * clusterRadius
       
-      // Stagger appearance - nodes appear one by one
-      const appearDelay = i * 15 // 15ms between each node
-      
-      return {
-        id: thought.id,
-        thought,
-        x: centerX, // Start from center
-        y: centerY,
-        targetX,
-        targetY,
-        vx: 0,
-        vy: 0,
-        radius: nodeRadius,
-        opacity: 0,
-        appearDelay,
-      }
+      folderThoughts.forEach((thought, i) => {
+        // Position nodes within cluster using a tight spiral
+        const nodeAngle = folderAngle + (i * 0.5) - (folderThoughts.length * 0.25)
+        const nodeRadius = 30 + i * 18
+        const targetX = clusterCenterX + Math.cos(nodeAngle) * Math.min(nodeRadius, 80)
+        const targetY = clusterCenterY + Math.sin(nodeAngle) * Math.min(nodeRadius, 80)
+        
+        const count = connectionCount[thought.id] || 0
+        const nodeSize = Math.max(2.5, Math.min(5, 2.5 + count * 0.2))
+        
+        nodes.push({
+          id: thought.id,
+          thought,
+          x: centerX,
+          y: centerY,
+          targetX,
+          targetY,
+          vx: 0,
+          vy: 0,
+          radius: nodeSize,
+          opacity: 0,
+          appearDelay: globalIndex * STAGGER_DELAY,
+        })
+        globalIndex++
+      })
     })
     
     nodesRef.current = nodes
@@ -207,100 +224,32 @@ export function GraphCanvas() {
         canvas.style.height = `${height}px`
       }
       
-      // Update node positions and opacity
+      // Update node positions with smooth eased animation (no physics)
       for (let i = 0; i < nodes.length; i++) {
         const node = nodes[i]
         
-        // Handle appearance animation
+        // Skip if being dragged or animation is complete
+        if (dragState.draggedNode?.id === node.id) continue
+        
         const timeSinceAppear = elapsed - node.appearDelay
-        if (timeSinceAppear > 0) {
-          // Fade in over 150ms
-          node.opacity = Math.min(1, timeSinceAppear / 150)
-          
-          // Smoothly move towards target position
-          if (timeSinceAppear < 400) {
-            const progress = Math.min(1, timeSinceAppear / 350)
-            const ease = 1 - Math.pow(1 - progress, 3) // Ease out cubic
-            node.x = centerX + (node.targetX - centerX) * ease
-            node.y = centerY + (node.targetY - centerY) * ease
-          }
-        }
+        const animDuration = 800 // Each node takes 800ms to reach position
         
-        // Skip physics for nodes still appearing or being dragged
-        if (node.opacity < 1 || dragState.draggedNode?.id === node.id) continue
-        
-        // Only run physics simulation for the first few seconds
-        if (elapsed < PHYSICS_DURATION) {
-          // Gentle center gravity
-          node.vx += (centerX - node.x) * CENTER_GRAVITY
-          node.vy += (centerY - node.y) * CENTER_GRAVITY
+        if (timeSinceAppear > 0 && timeSinceAppear < animDuration) {
+          // Smooth ease-out animation to target position
+          const progress = timeSinceAppear / animDuration
           
-          // Repulsion from other visible nodes
-          for (let j = i + 1; j < nodes.length; j++) {
-            const nodeB = nodes[j]
-            if (nodeB.opacity < 0.5) continue
-            
-            const dx = nodeB.x - node.x
-            const dy = nodeB.y - node.y
-            const dist = Math.sqrt(dx * dx + dy * dy) || 1
-            
-            if (dist < 150) {
-              const force = REPULSION / (dist * dist)
-              const fx = (dx / dist) * force
-              const fy = (dy / dist) * force
-              
-              node.vx -= fx
-              node.vy -= fy
-              if (dragState.draggedNode?.id !== nodeB.id && nodeB.opacity >= 1) {
-                nodeB.vx += fx
-                nodeB.vy += fy
-              }
-            }
-          }
+          // Ease out quart for smooth deceleration
+          const ease = 1 - Math.pow(1 - progress, 4)
+          
+          node.opacity = Math.min(1, timeSinceAppear / 200)
+          node.x = centerX + (node.targetX - centerX) * ease
+          node.y = centerY + (node.targetY - centerY) * ease
+        } else if (timeSinceAppear >= animDuration && node.opacity < 1) {
+          // Ensure final state is set
+          node.opacity = 1
+          node.x = node.targetX
+          node.y = node.targetY
         }
-      }
-      
-      // Edge attraction (only for fully visible nodes, only during physics phase)
-      if (elapsed < PHYSICS_DURATION) {
-        edges.forEach(edge => {
-          if (edge.source.opacity < 1 || edge.target.opacity < 1) return
-          
-          const dx = edge.target.x - edge.source.x
-          const dy = edge.target.y - edge.source.y
-          const dist = Math.sqrt(dx * dx + dy * dy) || 1
-          
-          const force = (dist - 50) * ATTRACTION
-          const fx = (dx / dist) * force
-          const fy = (dy / dist) * force
-          
-          if (dragState.draggedNode?.id !== edge.source.id) {
-            edge.source.vx += fx
-            edge.source.vy += fy
-          }
-          if (dragState.draggedNode?.id !== edge.target.id) {
-            edge.target.vx -= fx
-            edge.target.vy -= fy
-          }
-        })
-      }
-      
-      // Update positions (only during physics phase)
-      if (elapsed < PHYSICS_DURATION) {
-        nodes.forEach(node => {
-          if (dragState.draggedNode?.id === node.id || node.opacity < 1) return
-          
-          node.vx *= DAMPING
-          node.vy *= DAMPING
-          node.x += node.vx
-          node.y += node.vy
-          
-          // Soft bounds
-          const margin = 60
-          if (node.x < margin) node.vx += (margin - node.x) * 0.02
-          if (node.x > width - margin) node.vx += (width - margin - node.x) * 0.02
-          if (node.y < margin) node.vy += (margin - node.y) * 0.02
-          if (node.y > height - margin) node.vy += (height - margin - node.y) * 0.02
-        })
       }
       
       // Render
