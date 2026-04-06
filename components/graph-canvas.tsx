@@ -24,10 +24,10 @@ interface GraphEdge {
 }
 
 // Animation constants
-const ANIMATION_DURATION = 2500 // Total animation time in ms
-const STAGGER_DELAY = 30 // Delay between each node appearing
+const ANIMATION_DURATION = 2500
+const STAGGER_DELAY = 25
 
-// Theme colors - UI-matching amber/warm palette
+// Theme colors - rich, vibrant palette
 const THEME_COLORS: Record<string, string> = {
   amber: '#f59e0b',
   orange: '#f97316',
@@ -38,10 +38,13 @@ const THEME_COLORS: Record<string, string> = {
   slate: '#94a3b8',
 }
 
-// Edge colors - grey lines
-const EDGE_COLOR = 'rgba(255, 255, 255, 0.12)'
-const EDGE_HOVER_COLOR = 'rgba(255, 255, 255, 0.4)'
-const BG_COLOR = '#0c0c0e'
+// Visual constants
+const BG_COLOR = '#08080a'
+const BG_GRADIENT_CENTER = '#0f0f12'
+const EDGE_BASE_ALPHA = 0.08
+const EDGE_HIGHLIGHT_ALPHA = 0.35
+const GLOW_INTENSITY = 0.15
+const PULSE_SPEED = 0.002
 
 function hexToRgba(hex: string, alpha: number): string {
   const r = parseInt(hex.slice(1, 3), 16)
@@ -117,37 +120,53 @@ export function GraphCanvas() {
     })
     connectionCountRef.current = connectionCount
     
-    // Organic scattered layout - evenly distributed but with natural feel
+    // Organic constellation layout with natural clustering
     const total = thoughts.length
     const nodes: GraphNode[] = []
     
-    // Use golden angle for organic spiral distribution
+    // Golden angle for organic spiral distribution
     const goldenAngle = Math.PI * (3 - Math.sqrt(5))
-    const maxRadius = Math.min(width, height) * 0.42
-    const minRadius = 60
+    const maxRadius = Math.min(width, height) * 0.44
+    const minRadius = 45
     
-    // Sort by connection count - more connected nodes closer to center
+    // Sort by connection count - hub nodes go to center
     const sorted = [...thoughts].sort(
       (a, b) => (connectionCount[b.id] || 0) - (connectionCount[a.id] || 0)
     )
     
+    // Identify hub nodes (top 20% most connected)
+    const hubCount = Math.max(2, Math.floor(total * 0.2))
+    
     sorted.forEach((thought, i) => {
-      // Sunflower/Fermat spiral for even distribution
-      const angle = i * goldenAngle
-      // Sqrt distribution ensures even density across area
-      const radiusFactor = Math.sqrt(i / total)
-      const radius = minRadius + radiusFactor * (maxRadius - minRadius)
-      
-      // Add slight organic variation (15% jitter)
-      const jitterX = (random() - 0.5) * radius * 0.15
-      const jitterY = (random() - 0.5) * radius * 0.15
-      
-      const targetX = centerX + Math.cos(angle) * radius + jitterX
-      const targetY = centerY + Math.sin(angle) * radius + jitterY
-      
       const count = connectionCount[thought.id] || 0
-      // Larger nodes for more connections, placed near center
-      const nodeSize = Math.max(3, Math.min(7, 3.5 + count * 0.4))
+      const isHub = i < hubCount && count >= 2
+      
+      let targetX: number, targetY: number, nodeSize: number
+      
+      if (isHub) {
+        // Hub nodes: positioned in inner zone with slight spread
+        const hubAngle = (i / hubCount) * Math.PI * 2 + random() * 0.3
+        const hubRadius = minRadius + random() * 30
+        targetX = centerX + Math.cos(hubAngle) * hubRadius
+        targetY = centerY + Math.sin(hubAngle) * hubRadius
+        nodeSize = Math.max(4.5, Math.min(8, 4 + count * 0.5))
+      } else {
+        // Regular nodes: Fermat spiral with organic jitter
+        const spiralIndex = i - hubCount
+        const spiralTotal = total - hubCount
+        const angle = spiralIndex * goldenAngle
+        const radiusFactor = Math.sqrt((spiralIndex + 1) / (spiralTotal + 1))
+        const radius = minRadius + 40 + radiusFactor * (maxRadius - minRadius - 40)
+        
+        // Organic variation (18% jitter)
+        const jitter = 0.18
+        const jitterX = (random() - 0.5) * radius * jitter
+        const jitterY = (random() - 0.5) * radius * jitter
+        
+        targetX = centerX + Math.cos(angle) * radius + jitterX
+        targetY = centerY + Math.sin(angle) * radius + jitterY
+        nodeSize = Math.max(2.5, Math.min(5.5, 2.5 + count * 0.35))
+      }
       
       nodes.push({
         id: thought.id,
@@ -250,8 +269,35 @@ export function GraphCanvas() {
       
       // Render
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
-      ctx.fillStyle = BG_COLOR
+      
+      // Draw radial gradient background for depth
+      const bgGradient = ctx.createRadialGradient(
+        width / 2, height / 2, 0,
+        width / 2, height / 2, Math.max(width, height) * 0.7
+      )
+      bgGradient.addColorStop(0, BG_GRADIENT_CENTER)
+      bgGradient.addColorStop(1, BG_COLOR)
+      ctx.fillStyle = bgGradient
       ctx.fillRect(0, 0, width, height)
+      
+      // Subtle grid pattern for depth
+      ctx.save()
+      ctx.translate(transform.x % 40, transform.y % 40)
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.015)'
+      ctx.lineWidth = 1
+      for (let x = -40; x < width + 40; x += 40) {
+        ctx.beginPath()
+        ctx.moveTo(x, 0)
+        ctx.lineTo(x, height)
+        ctx.stroke()
+      }
+      for (let y = -40; y < height + 40; y += 40) {
+        ctx.beginPath()
+        ctx.moveTo(0, y)
+        ctx.lineTo(width, y)
+        ctx.stroke()
+      }
+      ctx.restore()
       
       ctx.save()
       ctx.translate(transform.x, transform.y)
@@ -279,7 +325,31 @@ export function GraphCanvas() {
       
       const hasHighlight = hoveredId || selectedId
       
-      // Draw edges - visible connecting lines
+      // Draw ambient glow halos behind important nodes first
+      nodes.forEach(node => {
+        if (node.opacity < 0.3) return
+        const connectionCount = connectionCountRef.current[node.id] || 0
+        if (connectionCount < 2) return
+        
+        const themeColor = THEME_COLORS[node.thought.color] || THEME_COLORS.slate
+        const glowRadius = node.radius * (3 + connectionCount * 0.8)
+        const pulsePhase = Math.sin(elapsed * PULSE_SPEED + node.appearDelay) * 0.15 + 0.85
+        
+        const gradient = ctx.createRadialGradient(
+          node.x, node.y, 0,
+          node.x, node.y, glowRadius
+        )
+        gradient.addColorStop(0, hexToRgba(themeColor, GLOW_INTENSITY * node.opacity * pulsePhase))
+        gradient.addColorStop(0.5, hexToRgba(themeColor, GLOW_INTENSITY * 0.3 * node.opacity * pulsePhase))
+        gradient.addColorStop(1, 'rgba(0,0,0,0)')
+        
+        ctx.fillStyle = gradient
+        ctx.beginPath()
+        ctx.arc(node.x, node.y, glowRadius, 0, Math.PI * 2)
+        ctx.fill()
+      })
+      
+      // Draw edges with curved bezier paths
       edges.forEach(edge => {
         const minOpacity = Math.min(edge.source.opacity, edge.target.opacity)
         if (minOpacity < 0.1) return
@@ -288,18 +358,49 @@ export function GraphCanvas() {
           (connectedToHovered.has(edge.source.id) && connectedToHovered.has(edge.target.id)) ||
           (connectedToSelected.has(edge.source.id) && connectedToSelected.has(edge.target.id))
         
+        const alpha = isHighlighted ? EDGE_HIGHLIGHT_ALPHA : hasHighlight ? 0.025 : EDGE_BASE_ALPHA
+        
+        // Calculate control point for subtle curve
+        const midX = (edge.source.x + edge.target.x) / 2
+        const midY = (edge.source.y + edge.target.y) / 2
+        const dx = edge.target.x - edge.source.x
+        const dy = edge.target.y - edge.source.y
+        const dist = Math.sqrt(dx * dx + dy * dy)
+        
+        // Perpendicular offset for curve - subtle
+        const curvature = Math.min(dist * 0.08, 20)
+        const perpX = -dy / dist * curvature
+        const perpY = dx / dist * curvature
+        const ctrlX = midX + perpX
+        const ctrlY = midY + perpY
+        
         ctx.globalAlpha = minOpacity
         ctx.beginPath()
         ctx.moveTo(edge.source.x, edge.source.y)
-        ctx.lineTo(edge.target.x, edge.target.y)
-        ctx.strokeStyle = isHighlighted ? EDGE_HOVER_COLOR : hasHighlight ? 'rgba(255, 255, 255, 0.04)' : EDGE_COLOR
-        ctx.lineWidth = isHighlighted ? 1 : 0.5
+        ctx.quadraticCurveTo(ctrlX, ctrlY, edge.target.x, edge.target.y)
+        
+        if (isHighlighted) {
+          // Gradient stroke for highlighted edges
+          const gradient = ctx.createLinearGradient(
+            edge.source.x, edge.source.y,
+            edge.target.x, edge.target.y
+          )
+          const srcColor = THEME_COLORS[edge.source.thought.color] || THEME_COLORS.slate
+          const tgtColor = THEME_COLORS[edge.target.thought.color] || THEME_COLORS.slate
+          gradient.addColorStop(0, hexToRgba(srcColor, alpha))
+          gradient.addColorStop(1, hexToRgba(tgtColor, alpha))
+          ctx.strokeStyle = gradient
+          ctx.lineWidth = 1.5
+        } else {
+          ctx.strokeStyle = `rgba(255, 255, 255, ${alpha})`
+          ctx.lineWidth = 0.5
+        }
         ctx.stroke()
       })
       
       ctx.globalAlpha = 1
       
-      // Draw nodes - small circles, stroke by default, fill on hover
+      // Draw nodes with enhanced visuals
       nodes.forEach(node => {
         if (node.opacity < 0.05) return
         
@@ -310,21 +411,62 @@ export function GraphCanvas() {
         const isActive = isHovered || isSelected
         
         const themeColor = THEME_COLORS[node.thought.color] || THEME_COLORS.slate
-        const radius = node.radius * (isActive ? 2 : 1.2)
+        const connectionCount = connectionCountRef.current[node.id] || 0
+        
+        // Size based on state and connections
+        let radius = node.radius * 1.2
+        if (isActive) radius = node.radius * 2.5
+        else if (isConnected) radius = node.radius * 1.6
+        
+        // Subtle pulse for connected nodes
+        const pulse = isConnected && !isActive 
+          ? Math.sin(elapsed * PULSE_SPEED * 1.5) * 0.1 + 1 
+          : 1
+        radius *= pulse
         
         ctx.globalAlpha = node.opacity
+        
+        // Draw outer ring for important nodes
+        if (connectionCount >= 3 && !isActive) {
+          ctx.beginPath()
+          ctx.arc(node.x, node.y, radius + 3, 0, Math.PI * 2)
+          ctx.strokeStyle = hexToRgba(themeColor, isDimmed ? 0.05 : 0.15)
+          ctx.lineWidth = 0.5
+          ctx.stroke()
+        }
         
         ctx.beginPath()
         ctx.arc(node.x, node.y, radius, 0, Math.PI * 2)
         
         if (isActive) {
-          // Fill on hover/select
-          ctx.fillStyle = hexToRgba(themeColor, 0.9)
+          // Filled with inner glow on hover/select
+          const innerGlow = ctx.createRadialGradient(
+            node.x - radius * 0.3, node.y - radius * 0.3, 0,
+            node.x, node.y, radius
+          )
+          innerGlow.addColorStop(0, hexToRgba(themeColor, 1))
+          innerGlow.addColorStop(0.7, hexToRgba(themeColor, 0.85))
+          innerGlow.addColorStop(1, hexToRgba(themeColor, 0.6))
+          ctx.fillStyle = innerGlow
           ctx.fill()
-        } else {
-          // Stroke only by default
-          ctx.strokeStyle = isDimmed ? hexToRgba(themeColor, 0.15) : hexToRgba(themeColor, 0.7)
+          
+          // Bright outer ring
+          ctx.strokeStyle = hexToRgba(themeColor, 0.9)
+          ctx.lineWidth = 1.5
+          ctx.stroke()
+        } else if (isConnected) {
+          // Semi-filled for connected nodes
+          ctx.fillStyle = hexToRgba(themeColor, isDimmed ? 0.1 : 0.3)
+          ctx.fill()
+          ctx.strokeStyle = hexToRgba(themeColor, isDimmed ? 0.2 : 0.6)
           ctx.lineWidth = 1
+          ctx.stroke()
+        } else {
+          // Stroke only for regular nodes
+          ctx.fillStyle = hexToRgba(themeColor, isDimmed ? 0.03 : 0.08)
+          ctx.fill()
+          ctx.strokeStyle = hexToRgba(themeColor, isDimmed ? 0.1 : 0.5)
+          ctx.lineWidth = 0.75
           ctx.stroke()
         }
       })
