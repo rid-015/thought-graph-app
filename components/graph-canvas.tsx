@@ -120,53 +120,35 @@ export function GraphCanvas() {
     })
     connectionCountRef.current = connectionCount
     
-    // Organic constellation layout with natural clustering
+    // Bold square flower grid layout
     const total = thoughts.length
     const nodes: GraphNode[] = []
     
-    // Golden angle for organic spiral distribution
-    const goldenAngle = Math.PI * (3 - Math.sqrt(5))
-    const maxRadius = Math.min(width, height) * 0.44
-    const minRadius = 45
+    // Create a grid-based square flower pattern
+    const gridSize = Math.ceil(Math.sqrt(total))
+    const cellSize = 150 // Distance between nodes in grid
+    const gridWidth = gridSize * cellSize
+    const gridHeight = gridSize * cellSize
     
-    // Sort by connection count - hub nodes go to center
+    // Center the grid on canvas
+    const startX = centerX - gridWidth / 2
+    const startY = centerY - gridHeight / 2
+    
+    // Sort by connection count for visual hierarchy
     const sorted = [...thoughts].sort(
       (a, b) => (connectionCount[b.id] || 0) - (connectionCount[a.id] || 0)
     )
     
-    // Identify hub nodes (top 20% most connected)
-    const hubCount = Math.max(2, Math.floor(total * 0.2))
-    
     sorted.forEach((thought, i) => {
+      const row = Math.floor(i / gridSize)
+      const col = i % gridSize
+      
+      // Grid position with bold spacing
+      const targetX = startX + col * cellSize + cellSize / 2
+      const targetY = startY + row * cellSize + cellSize / 2
+      
       const count = connectionCount[thought.id] || 0
-      const isHub = i < hubCount && count >= 2
-      
-      let targetX: number, targetY: number, nodeSize: number
-      
-      if (isHub) {
-        // Hub nodes: positioned in inner zone with slight spread
-        const hubAngle = (i / hubCount) * Math.PI * 2 + random() * 0.3
-        const hubRadius = minRadius + random() * 30
-        targetX = centerX + Math.cos(hubAngle) * hubRadius
-        targetY = centerY + Math.sin(hubAngle) * hubRadius
-        nodeSize = Math.max(4.5, Math.min(8, 4 + count * 0.5))
-      } else {
-        // Regular nodes: Fermat spiral with organic jitter
-        const spiralIndex = i - hubCount
-        const spiralTotal = total - hubCount
-        const angle = spiralIndex * goldenAngle
-        const radiusFactor = Math.sqrt((spiralIndex + 1) / (spiralTotal + 1))
-        const radius = minRadius + 40 + radiusFactor * (maxRadius - minRadius - 40)
-        
-        // Organic variation (18% jitter)
-        const jitter = 0.18
-        const jitterX = (random() - 0.5) * radius * jitter
-        const jitterY = (random() - 0.5) * radius * jitter
-        
-        targetX = centerX + Math.cos(angle) * radius + jitterX
-        targetY = centerY + Math.sin(angle) * radius + jitterY
-        nodeSize = Math.max(2.5, Math.min(5.5, 2.5 + count * 0.35))
-      }
+      const nodeSize = Math.max(4, Math.min(9, 4 + count * 0.7))
       
       nodes.push({
         id: thought.id,
