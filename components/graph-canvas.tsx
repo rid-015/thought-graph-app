@@ -213,12 +213,12 @@ export function GraphCanvas() {
         // Handle appearance animation
         const timeSinceAppear = elapsed - node.appearDelay
         if (timeSinceAppear > 0) {
-          // Fade in over 300ms
-          node.opacity = Math.min(1, timeSinceAppear / 300)
+          // Fade in over 150ms
+          node.opacity = Math.min(1, timeSinceAppear / 150)
           
           // Smoothly move towards target position
-          if (timeSinceAppear < 1000) {
-            const progress = Math.min(1, timeSinceAppear / 800)
+          if (timeSinceAppear < 400) {
+            const progress = Math.min(1, timeSinceAppear / 350)
             const ease = 1 - Math.pow(1 - progress, 3) // Ease out cubic
             node.x = centerX + (node.targetX - centerX) * ease
             node.y = centerY + (node.targetY - centerY) * ease
