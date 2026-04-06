@@ -28,6 +28,7 @@ const REPULSION = 300
 const ATTRACTION = 0.003
 const DAMPING = 0.92
 const CENTER_GRAVITY = 0.002
+const PHYSICS_DURATION = 3500 // Stop physics simulation after 3.5 seconds
 
 // Theme colors - UI-matching amber/warm palette
 const THEME_COLORS: Record<string, string> = {
@@ -228,72 +229,79 @@ export function GraphCanvas() {
         // Skip physics for nodes still appearing or being dragged
         if (node.opacity < 1 || dragState.draggedNode?.id === node.id) continue
         
-        // Gentle center gravity
-        node.vx += (centerX - node.x) * CENTER_GRAVITY
-        node.vy += (centerY - node.y) * CENTER_GRAVITY
-        
-        // Repulsion from other visible nodes
-        for (let j = i + 1; j < nodes.length; j++) {
-          const nodeB = nodes[j]
-          if (nodeB.opacity < 0.5) continue
+        // Only run physics simulation for the first few seconds
+        if (elapsed < PHYSICS_DURATION) {
+          // Gentle center gravity
+          node.vx += (centerX - node.x) * CENTER_GRAVITY
+          node.vy += (centerY - node.y) * CENTER_GRAVITY
           
-          const dx = nodeB.x - node.x
-          const dy = nodeB.y - node.y
-          const dist = Math.sqrt(dx * dx + dy * dy) || 1
-          
-          if (dist < 150) {
-            const force = REPULSION / (dist * dist)
-            const fx = (dx / dist) * force
-            const fy = (dy / dist) * force
+          // Repulsion from other visible nodes
+          for (let j = i + 1; j < nodes.length; j++) {
+            const nodeB = nodes[j]
+            if (nodeB.opacity < 0.5) continue
             
-            node.vx -= fx
-            node.vy -= fy
-            if (dragState.draggedNode?.id !== nodeB.id && nodeB.opacity >= 1) {
-              nodeB.vx += fx
-              nodeB.vy += fy
+            const dx = nodeB.x - node.x
+            const dy = nodeB.y - node.y
+            const dist = Math.sqrt(dx * dx + dy * dy) || 1
+            
+            if (dist < 150) {
+              const force = REPULSION / (dist * dist)
+              const fx = (dx / dist) * force
+              const fy = (dy / dist) * force
+              
+              node.vx -= fx
+              node.vy -= fy
+              if (dragState.draggedNode?.id !== nodeB.id && nodeB.opacity >= 1) {
+                nodeB.vx += fx
+                nodeB.vy += fy
+              }
             }
           }
         }
       }
       
-      // Edge attraction (only for fully visible nodes)
-      edges.forEach(edge => {
-        if (edge.source.opacity < 1 || edge.target.opacity < 1) return
-        
-        const dx = edge.target.x - edge.source.x
-        const dy = edge.target.y - edge.source.y
-        const dist = Math.sqrt(dx * dx + dy * dy) || 1
-        
-        const force = (dist - 50) * ATTRACTION
-        const fx = (dx / dist) * force
-        const fy = (dy / dist) * force
-        
-        if (dragState.draggedNode?.id !== edge.source.id) {
-          edge.source.vx += fx
-          edge.source.vy += fy
-        }
-        if (dragState.draggedNode?.id !== edge.target.id) {
-          edge.target.vx -= fx
-          edge.target.vy -= fy
-        }
-      })
+      // Edge attraction (only for fully visible nodes, only during physics phase)
+      if (elapsed < PHYSICS_DURATION) {
+        edges.forEach(edge => {
+          if (edge.source.opacity < 1 || edge.target.opacity < 1) return
+          
+          const dx = edge.target.x - edge.source.x
+          const dy = edge.target.y - edge.source.y
+          const dist = Math.sqrt(dx * dx + dy * dy) || 1
+          
+          const force = (dist - 50) * ATTRACTION
+          const fx = (dx / dist) * force
+          const fy = (dy / dist) * force
+          
+          if (dragState.draggedNode?.id !== edge.source.id) {
+            edge.source.vx += fx
+            edge.source.vy += fy
+          }
+          if (dragState.draggedNode?.id !== edge.target.id) {
+            edge.target.vx -= fx
+            edge.target.vy -= fy
+          }
+        })
+      }
       
-      // Update positions
-      nodes.forEach(node => {
-        if (dragState.draggedNode?.id === node.id || node.opacity < 1) return
-        
-        node.vx *= DAMPING
-        node.vy *= DAMPING
-        node.x += node.vx
-        node.y += node.vy
-        
-        // Soft bounds
-        const margin = 60
-        if (node.x < margin) node.vx += (margin - node.x) * 0.02
-        if (node.x > width - margin) node.vx += (width - margin - node.x) * 0.02
-        if (node.y < margin) node.vy += (margin - node.y) * 0.02
-        if (node.y > height - margin) node.vy += (height - margin - node.y) * 0.02
-      })
+      // Update positions (only during physics phase)
+      if (elapsed < PHYSICS_DURATION) {
+        nodes.forEach(node => {
+          if (dragState.draggedNode?.id === node.id || node.opacity < 1) return
+          
+          node.vx *= DAMPING
+          node.vy *= DAMPING
+          node.x += node.vx
+          node.y += node.vy
+          
+          // Soft bounds
+          const margin = 60
+          if (node.x < margin) node.vx += (margin - node.x) * 0.02
+          if (node.x > width - margin) node.vx += (width - margin - node.x) * 0.02
+          if (node.y < margin) node.vy += (margin - node.y) * 0.02
+          if (node.y > height - margin) node.vy += (height - margin - node.y) * 0.02
+        })
+      }
       
       // Render
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
