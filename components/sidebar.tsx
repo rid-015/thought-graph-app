@@ -270,11 +270,8 @@ export function Sidebar({ onClose }: SidebarProps) {
                           className={`w-full flex items-center gap-2 px-2 py-1.5 rounded-sm text-[13px] text-left transition-all ${
                             selectedId === thought.id 
                               ? 'bg-white/10 text-white/90 border-l-2 border-amber-500/50 -ml-[3px] pl-[11px]' 
-                          onClick={() => selectThought(thought.id)}
-                          className={`w-full flex items-center gap-2 px-2 py-1.5 rounded-sm text-[13px] text-left transition-all ${selectedId === thought.id
-                              ? 'bg-white/10 text-white/90 border-l-2 border-amber-500/50 -ml-[3px] pl-[11px]main
                               : 'text-white/50 hover:text-white/70 hover:bg-white/5'
-                            }`}
+                          }`}
                         >
                           <FileText className="w-3.5 h-3.5 text-white/30 flex-shrink-0" />
                           <span className="truncate flex-1">{thought.title}</span>
@@ -304,12 +301,8 @@ export function Sidebar({ onClose }: SidebarProps) {
                   className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-sm text-[13px] text-left transition-all ${
                     selectedId === thought.id 
                       ? 'bg-white/10 text-white/90' 
-
-                  onClick={() => selectThought(thought.id)}
-                  className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-sm text-[13px] text-left transition-all ${selectedId === thought.id
-                      ? 'bg-white/10 text-white/90'
                       : 'text-white/60 hover:text-white/80 hover:bg-white/5'
-                    }`}
+                  }`}
                 >
                   <span
                     className="w-2 h-2 rounded-full flex-shrink-0"
