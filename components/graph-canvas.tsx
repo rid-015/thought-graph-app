@@ -503,6 +503,102 @@ export function GraphCanvas() {
     setTooltip(null)
     hoverThought(null)
   }, [hoverThought])
+
+  // Touch state
+  const touchStateRef = useRef({
+    lastTouches: null as TouchList | null,
+    lastPinchDist: 0,
+  })
+
+  const getTouchPos = useCallback((touch: Touch) => {
+    const rect = canvasRef.current?.getBoundingClientRect()
+    if (!rect) return { x: 0, y: 0 }
+    const t = transformRef.current
+    return {
+      x: (touch.clientX - rect.left - t.x) / t.scale,
+      y: (touch.clientY - rect.top - t.y) / t.scale,
+    }
+  }, [])
+
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    e.preventDefault()
+    touchStateRef.current.lastTouches = e.touches
+
+    if (e.touches.length === 1) {
+      const pos = getTouchPos(e.touches[0])
+      const node = findNodeAt(pos.x, pos.y)
+      if (node) {
+        dragStateRef.current.draggedNode = node
+      } else {
+        dragStateRef.current.isDragging = true
+        dragStateRef.current.dragStart = {
+          x: e.touches[0].clientX - transformRef.current.x,
+          y: e.touches[0].clientY - transformRef.current.y,
+        }
+      }
+    } else if (e.touches.length === 2) {
+      const dx = e.touches[1].clientX - e.touches[0].clientX
+      const dy = e.touches[1].clientY - e.touches[0].clientY
+      touchStateRef.current.lastPinchDist = Math.sqrt(dx * dx + dy * dy)
+      dragStateRef.current.isDragging = false
+      dragStateRef.current.draggedNode = null
+    }
+  }, [getTouchPos, findNodeAt])
+
+  const handleTouchMove = useCallback((e: React.TouchEvent) => {
+    e.preventDefault()
+
+    if (e.touches.length === 1) {
+      const drag = dragStateRef.current
+      if (drag.draggedNode) {
+        const pos = getTouchPos(e.touches[0])
+        drag.draggedNode.x = pos.x
+        drag.draggedNode.y = pos.y
+        drag.draggedNode.vx = 0
+        drag.draggedNode.vy = 0
+      } else if (drag.isDragging) {
+        transformRef.current.x = e.touches[0].clientX - drag.dragStart.x
+        transformRef.current.y = e.touches[0].clientY - drag.dragStart.y
+      }
+    } else if (e.touches.length === 2) {
+      const dx = e.touches[1].clientX - e.touches[0].clientX
+      const dy = e.touches[1].clientY - e.touches[0].clientY
+      const dist = Math.sqrt(dx * dx + dy * dy)
+      const prevDist = touchStateRef.current.lastPinchDist
+
+      if (prevDist > 0) {
+        const rect = canvasRef.current?.getBoundingClientRect()
+        if (rect) {
+          const midX = (e.touches[0].clientX + e.touches[1].clientX) / 2 - rect.left
+          const midY = (e.touches[0].clientY + e.touches[1].clientY) / 2 - rect.top
+          const t = transformRef.current
+          const scaleChange = dist / prevDist
+          const newScale = Math.max(0.3, Math.min(3, t.scale * scaleChange))
+          const actualScale = newScale / t.scale
+          transformRef.current = {
+            x: midX - (midX - t.x) * actualScale,
+            y: midY - (midY - t.y) * actualScale,
+            scale: newScale,
+          }
+        }
+      }
+      touchStateRef.current.lastPinchDist = dist
+    }
+  }, [getTouchPos])
+
+  const handleTouchEnd = useCallback((e: React.TouchEvent) => {
+    if (e.changedTouches.length === 1 && e.touches.length === 0) {
+      const drag = dragStateRef.current
+      if (!drag.isDragging && !drag.draggedNode) {
+        const pos = getTouchPos(e.changedTouches[0])
+        const node = findNodeAt(pos.x, pos.y)
+        if (node) selectThought(node.id)
+      }
+    }
+    dragStateRef.current.isDragging = false
+    dragStateRef.current.draggedNode = null
+    touchStateRef.current.lastPinchDist = 0
+  }, [getTouchPos, findNodeAt, selectThought])
   
   const handleZoom = useCallback((direction: 'in' | 'out') => {
     const container = containerRef.current
@@ -528,13 +624,16 @@ export function GraphCanvas() {
     <div ref={containerRef} className="w-full h-full relative overflow-hidden">
       <canvas
         ref={canvasRef}
-        className="absolute inset-0 cursor-grab active:cursor-grabbing"
+        className="absolute inset-0 cursor-grab active:cursor-grabbing touch-none"
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseLeave}
         onClick={handleClick}
         onWheel={handleWheel}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
       />
       
       {/* Tooltip overlay - techy HUD style */}
@@ -615,8 +714,11 @@ export function GraphCanvas() {
       </div>
       
       {/* Controls hint */}
-      <div className="absolute bottom-4 left-4 text-[10px] text-white/30">
+      <div className="absolute bottom-4 left-4 text-[10px] text-white/30 hidden md:block">
         Drag to pan · Scroll to zoom · Click node to view
+      </div>
+      <div className="absolute bottom-4 left-4 text-[10px] text-white/30 md:hidden">
+        Drag to pan · Pinch to zoom · Tap node to view
       </div>
     </div>
   )

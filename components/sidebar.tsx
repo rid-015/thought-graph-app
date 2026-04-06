@@ -15,7 +15,11 @@ import {
 
 type Filter = 'all' | 'starred' | 'recent'
 
-export function Sidebar() {
+interface SidebarProps {
+  onClose?: () => void
+}
+
+export function Sidebar({ onClose }: SidebarProps) {
   const [filter, setFilter] = useState<Filter>('all')
   const [search, setSearch] = useState('')
   const [newTitle, setNewTitle] = useState('')
@@ -82,7 +86,7 @@ export function Sidebar() {
   }
   
   return (
-    <aside className="w-64 h-full flex flex-col glass-subtle" suppressHydrationWarning>
+    <aside className="w-full h-full flex flex-col glass-subtle" suppressHydrationWarning>
       {/* Header */}
       <div className="px-4 pt-4 pb-3">
         <div className="flex items-center justify-between">
@@ -93,7 +97,7 @@ export function Sidebar() {
             <span className="font-semibold text-[15px] text-white/90">Nodus</span>
           </div>
           <button
-            onClick={() => { setViewMode('graph'); selectThought(null) }}
+            onClick={() => { setViewMode('graph'); selectThought(null); onClose?.() }}
             className={`w-8 h-8 flex items-center justify-center transition-all duration-150 hover:bg-white/5 active:scale-95 ${viewMode === 'graph' ? 'text-amber-400 bg-amber-500/10' : 'text-white/40'}`}
             title="Graph View"
           >
@@ -265,7 +269,7 @@ export function Sidebar() {
                       {folderThoughts.map((thought, idx) => (
                         <button
                           key={`${folder.id}-${thought.id}-${idx}`}
-                          onClick={() => selectThought(thought.id)}
+                          onClick={() => { selectThought(thought.id); onClose?.() }}
                           className={`w-full flex items-center gap-2 px-2 py-1.5 rounded-sm text-[13px] text-left transition-all ${
                             selectedId === thought.id 
                               ? 'bg-white/10 text-white/90 border-l-2 border-amber-500/50 -ml-[3px] pl-[11px]' 
@@ -296,7 +300,7 @@ export function Sidebar() {
               filtered.map((thought, idx) => (
                 <button
                   key={`flat-${thought.id}-${idx}`}
-                  onClick={() => selectThought(thought.id)}
+                  onClick={() => { selectThought(thought.id); onClose?.() }}
                   className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-sm text-[13px] text-left transition-all ${
                     selectedId === thought.id 
                       ? 'bg-white/10 text-white/90' 
