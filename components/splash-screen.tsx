@@ -22,22 +22,33 @@ export function SplashScreen({ onComplete }: SplashScreenProps) {
     return () => timers.forEach(clearTimeout)
   }, [onComplete])
 
-  // Constellation-style graph points (not circular/flower pattern)
+  // Bold hub-and-spoke graph — 4 hubs in inner ring, 9 satellites in outer ring
+  const hubAngles = [0, 1, 2, 3].map(i => (i / 4) * Math.PI * 2 - Math.PI / 2)
+  const innerR = 62
+  const outerR = 118
+
   const graphNodes = [
-    { x: 0, y: -60, delay: 0 },
-    { x: 70, y: -25, delay: 0.1 },
-    { x: 55, y: 50, delay: 0.15 },
-    { x: -30, y: 70, delay: 0.2 },
-    { x: -75, y: 10, delay: 0.25 },
-    { x: -45, y: -45, delay: 0.3 },
-    { x: 25, y: 20, delay: 0.35 },
-    { x: -15, y: -10, delay: 0.4 },
+    // 4 hub nodes (inner ring)
+    ...hubAngles.map((a, i) => ({
+      x: Math.cos(a) * innerR,
+      y: Math.sin(a) * innerR,
+      r: 5,
+      delay: i * 0.08,
+    })),
+    // 9 satellite nodes (outer ring, offset between hubs)
+    ...[0,1,2,3,4,5,6,7,8].map(i => {
+      const a = (i / 9) * Math.PI * 2 - Math.PI / 2 + (Math.PI / 9)
+      const r = outerR + (i % 3 === 0 ? 14 : i % 3 === 1 ? -14 : 0)
+      return { x: Math.cos(a) * r, y: Math.sin(a) * r, r: 2.5, delay: 0.32 + i * 0.05 }
+    }),
   ]
 
-  // Connection pairs for constellation effect
-  const connections = [
-    [0, 1], [1, 2], [2, 3], [3, 4], [4, 5], [5, 0],
-    [6, 0], [6, 2], [7, 4], [7, 6], [7, 5], [6, 1],
+  // Connections: each satellite connects to its nearest hub + one cross-hub link
+  const connections: [number, number][] = [
+    // Hub ring
+    [0,1],[1,2],[2,3],[3,0],[0,2],
+    // Satellites to nearest hub
+    [4,0],[4,1],[5,1],[5,2],[6,2],[6,3],[7,3],[7,0],[8,0],[9,1],[10,2],[11,3],[12,0],
   ]
 
   return (
@@ -52,17 +63,22 @@ export function SplashScreen({ onComplete }: SplashScreenProps) {
           <svg className="absolute inset-0 w-full h-full">
             {/* Connection lines */}
             <g style={{ animation: 'splash-lines-appear 0.8s ease-out 0.3s both' }}>
-              {connections.map(([from, to], i) => (
-                <line
-                  key={i}
-                  x1={`calc(50% + ${graphNodes[from].x}px)`}
-                  y1={`calc(50% + ${graphNodes[from].y}px)`}
-                  x2={`calc(50% + ${graphNodes[to].x}px)`}
-                  y2={`calc(50% + ${graphNodes[to].y}px)`}
-                  stroke="rgba(255, 255, 255, 0.08)"
-                  strokeWidth="1"
-                />
-              ))}
+              {connections.map(([from, to], i) => {
+                  const a = graphNodes[from]
+                  const b = graphNodes[to]
+                  if (!a || !b) return null
+                  return (
+                    <line
+                      key={i}
+                      x1={`calc(50% + ${a.x}px)`}
+                      y1={`calc(50% + ${a.y}px)`}
+                      x2={`calc(50% + ${b.x}px)`}
+                      y2={`calc(50% + ${b.y}px)`}
+                      stroke="rgba(255,255,255,0.10)"
+                      strokeWidth="1"
+                    />
+                  )
+                })}
             </g>
             
             {/* Nodes */}
@@ -71,10 +87,10 @@ export function SplashScreen({ onComplete }: SplashScreenProps) {
                 key={i}
                 cx={`calc(50% + ${node.x}px)`}
                 cy={`calc(50% + ${node.y}px)`}
-                r={i < 2 ? 4 : i < 5 ? 3 : 2}
-                fill="rgba(255, 255, 255, 0.5)"
+                r={node.r}
+                fill={i < 4 ? 'rgba(245,158,11,0.7)' : 'rgba(255,255,255,0.4)'}
                 style={{
-                  animation: `splash-dot-appear 0.5s ease-out ${node.delay}s both`,
+                  animation: `splash-dot-appear 0.4s ease-out ${node.delay}s both`,
                 }}
               />
             ))}

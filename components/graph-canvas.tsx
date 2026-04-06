@@ -117,53 +117,55 @@ export function GraphCanvas() {
     })
     connectionCountRef.current = connectionCount
     
-    // Create nodes with clean spiral layout - no physics, just smooth animation
-    // Group nodes by folder for clustering
-    const folderGroups: Record<string, typeof thoughts> = {}
-    thoughts.forEach(thought => {
-      const fid = thought.folderId || 'uncategorized'
-      if (!folderGroups[fid]) folderGroups[fid] = []
-      folderGroups[fid].push(thought)
-    })
-    
-    const folderIds = Object.keys(folderGroups)
+    // Bold radial hub-and-spoke layout
+    // Sort thoughts by connection count descending — most connected = hubs
+    const sorted = [...thoughts].sort(
+      (a, b) => (connectionCount[b.id] || 0) - (connectionCount[a.id] || 0)
+    )
+
+    const total = sorted.length
+    // Number of hub nodes placed in the first ring
+    const hubCount = Math.min(6, Math.max(3, Math.floor(total * 0.25)))
     const nodes: GraphNode[] = []
-    let globalIndex = 0
-    
-    // Layout each folder as a cluster
-    folderIds.forEach((folderId, folderIndex) => {
-      const folderThoughts = folderGroups[folderId]
-      const folderAngle = (folderIndex / folderIds.length) * Math.PI * 2 - Math.PI / 2
-      
-      // Folder cluster center - spread folders in a ring
-      const clusterRadius = Math.min(width, height) * 0.25
-      const clusterCenterX = centerX + Math.cos(folderAngle) * clusterRadius
-      const clusterCenterY = centerY + Math.sin(folderAngle) * clusterRadius
-      
-      folderThoughts.forEach((thought, i) => {
-        // Position nodes within cluster using a tight spiral
-        const nodeAngle = folderAngle + (i * 0.5) - (folderThoughts.length * 0.25)
-        const nodeRadius = 30 + i * 18
-        const targetX = clusterCenterX + Math.cos(nodeAngle) * Math.min(nodeRadius, 80)
-        const targetY = clusterCenterY + Math.sin(nodeAngle) * Math.min(nodeRadius, 80)
-        
-        const count = connectionCount[thought.id] || 0
-        const nodeSize = Math.max(2.5, Math.min(5, 2.5 + count * 0.2))
-        
-        nodes.push({
-          id: thought.id,
-          thought,
-          x: centerX,
-          y: centerY,
-          targetX,
-          targetY,
-          vx: 0,
-          vy: 0,
-          radius: nodeSize,
-          opacity: 0,
-          appearDelay: globalIndex * STAGGER_DELAY,
-        })
-        globalIndex++
+
+    // Place hub nodes in a wide first ring
+    const hubRingRadius = Math.min(width, height) * 0.28
+    sorted.slice(0, hubCount).forEach((thought, i) => {
+      const angle = (i / hubCount) * Math.PI * 2 - Math.PI / 2
+      const count = connectionCount[thought.id] || 0
+      nodes.push({
+        id: thought.id,
+        thought,
+        x: centerX,
+        y: centerY,
+        targetX: centerX + Math.cos(angle) * hubRingRadius,
+        targetY: centerY + Math.sin(angle) * hubRingRadius,
+        vx: 0, vy: 0,
+        radius: Math.max(4, Math.min(7, 3.5 + count * 0.35)),
+        opacity: 0,
+        appearDelay: i * STAGGER_DELAY,
+      })
+    })
+
+    // Place remaining nodes in an outer ring, each anchored near its closest hub
+    const outerRingRadius = Math.min(width, height) * 0.44
+    const outerNodes = sorted.slice(hubCount)
+    outerNodes.forEach((thought, i) => {
+      const angle = (i / outerNodes.length) * Math.PI * 2 - Math.PI / 2 + (Math.PI / outerNodes.length)
+      // Alternate radius slightly to avoid grid feel
+      const r = outerRingRadius + (i % 3 === 0 ? 18 : i % 3 === 1 ? -18 : 0)
+      const count = connectionCount[thought.id] || 0
+      nodes.push({
+        id: thought.id,
+        thought,
+        x: centerX,
+        y: centerY,
+        targetX: centerX + Math.cos(angle) * r,
+        targetY: centerY + Math.sin(angle) * r,
+        vx: 0, vy: 0,
+        radius: Math.max(2.5, Math.min(4.5, 2.5 + count * 0.2)),
+        opacity: 0,
+        appearDelay: (hubCount + i) * STAGGER_DELAY,
       })
     })
     

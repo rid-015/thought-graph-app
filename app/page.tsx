@@ -43,8 +43,8 @@ export default function NodusGraphApp() {
         {/* Mobile top bar */}
         <header className="flex items-center justify-between px-4 py-3 border-b border-white/8 glass-subtle flex-shrink-0">
           <div className="flex items-center gap-2">
-            <div className="w-7 h-7 bg-amber-500/15 flex items-center justify-center">
-              <Network className="w-4 h-4 text-amber-400" />
+            <div className="w-7 h-7 bg-[#f59e0b]/15 flex items-center justify-center">
+              <Network className="w-4 h-4 text-[#f59e0b]" />
             </div>
             <span className="font-semibold text-[15px] text-white/90">Nodus</span>
           </div>
@@ -97,14 +97,14 @@ export default function NodusGraphApp() {
               onClick={() => setMobileTab(tab)}
               className={`relative flex-1 flex flex-col items-center gap-1 py-3 pb-4 text-[11px] transition-all duration-150 active:scale-95 ${
                 mobileTab === tab
-                  ? 'text-amber-400'
+                  ? 'text-[#f59e0b]'
                   : 'text-white/40'
               }`}
             >
               <Icon className={`w-5 h-5 ${mobileTab === tab ? 'opacity-100' : 'opacity-60'}`} />
               <span>{label}</span>
               {mobileTab === tab && (
-                <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-8 h-0.5 bg-amber-500/60 rounded-full" />
+                <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-8 h-0.5 bg-[#f59e0b]/60 rounded-full" />
               )}
             </button>
           ))}
